@@ -7,15 +7,15 @@ Command line interface.
 
 Screenshots:
 
-![work help](http://cl.ly/wiR)
+![work help](http://cl.ly/wiR/content)
 
-![work list](http://cl.ly/wtv)
+![work list](http://cl.ly/wtv/content)
 
-![work report daily](http://cl.ly/xsh)
+![work report daily](http://cl.ly/xsh/content)
 
-![work report weekly](http://cl.ly/xpJ)
+![work report weekly](http://cl.ly/xpJ/content)
 
-![work report montly](http://cl.ly/x41)
+![work report montly](http://cl.ly/x41/content)
 
 ## Requirements
 
