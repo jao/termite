@@ -65,9 +65,9 @@ Something like this:
 
 * add a config file option (at the user's home directory)
 * add database migration-like updates
-* add the option to start and stop working more than once a day
-* add the support to projects, and maybe reports based on projects
-* make better reports
+* add the option to start and stop working more than once a day, or at least break intervals other than lunch
+* add support to projects, and reports based on projects
+* add support to tags, and reports based on tags
 * add an export feature to convert the reports to pdf, csv, etc.
 
 ## License
