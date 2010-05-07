@@ -357,7 +357,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           month = []          
           day = start_of_month = today.start_of_month
           while day.month == today.month
-            (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily day
+            (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily(today.day == day.day ? today : day)
             worked_hours += total.to_i
             worked_days += 1 if !start.nil?
             month[day.day] = [day.wday, total]
