@@ -64,21 +64,6 @@ rescue Exception => e
   puts help_message
 end
 
-def p_datetime t
-  return '' unless Time === t
-  t.strftime("%d/%m/%Y %H:%M")
-end
-
-def p_date t
-  return '' unless Time === t
-  t.strftime("%d/%m/%Y")
-end
-
-def p_time t
-  return '' unless Time === t
-  t.strftime("%H:%M")
-end
-
 def cpick args
   time = Time.at(args[:date])
   return 'cyan' if [0,6].include? time.wday
@@ -174,7 +159,7 @@ begin
           puts list_header
           puts list_row(row)
           puts ""
-          puts "are you sure you want to change the date in this entry to '#{date.strftime("%Y-%m-%d %H:%M")}'? [y/N]".warning
+          puts "are you sure you want to change the date in this entry to '#{date.ftime('iso')}'? [y/N]".warning
           confirmation = STDIN.gets.chomp
           if confirmation =~ /y/i
             Entry.update({:conditions => "timesheet_id=#{id}", :fields => "date=#{date.to_i}"})
@@ -189,7 +174,7 @@ begin
         puts list_header
         puts list_row(row)
         puts ""
-        puts "are you sure you want to change the date in this entry to '#{now.strftime("%Y-%m-%d %H:%M")}'? [y/N]".warning
+        puts "are you sure you want to change the date in this entry to '#{now.ftime('iso')}'? [y/N]".warning
         confirmation = STDIN.gets.chomp
         if confirmation =~ /y/i
           Entry.update({:conditions => "timesheet_id=#{row.timesheet_id}", :fields => "date=#{now.to_i}"})
@@ -294,13 +279,13 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             worked_days += 1 if !start.nil?
             
             puts [
-              today.strftime("%a %d/%m").left(11).tc(([0,6].include? today.wday) ? 'cyan' : 'white'),
+              today.ftime('wdaydate').left(11).tc(([0,6].include? today.wday) ? 'cyan' : 'white'),
               ((start.nil?) ? '' : start.time).right(10).tc(cpick({:status => 'start', :date => start.to_i})),
               ((lunch.nil?) ? '' : lunch.time).right(10).tc(cpick({:status => 'lunch', :date => lunch.to_i})),
               ((back.nil?) ? '' : back.time).right(10).tc(cpick({:status => 'back', :date => back.to_i})),
               ((stop.nil? or stop==now) ? '' : stop.time).right(10).tc(cpick({:status => 'stop', :date => stop.to_i})),
-              ((lunch_duration.to_i > 0) ? lunch_duration.strftime("%H:%M") : '').right(10).tc(cpick({:status => 'lunch_duration', :date => lunch_duration.to_i})),
-              ((total.nil?) ? '' : p_time(total)).right(10).tc(cpick({:status => 'total', :date => total.to_i}))
+              ((lunch_duration.to_i > 0) ? lunch_duration.ftime : '').right(10).tc(cpick({:status => 'lunch_duration', :date => lunch_duration.to_i})),
+              ((total.nil?) ? '' : total.ftime).right(10).tc(cpick({:status => 'total', :date => total.to_i}))
             ].join('|')
             today = today.yesterday
           end
@@ -322,7 +307,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week_days_header = ["".left(15).tc('black','white')]
           0.upto(6) do |day_of_week|
             day = start_of_week.days(day_of_week)
-            week_days_header << day.strftime("%a").center(7).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'green', 'b')
+            week_days_header << day.ftime('wday').center(7).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'green', 'b')
           end
           puts week_days_header.join("|")
           
@@ -333,12 +318,12 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           0.upto(3) do |week|
             start_of_week = today.days(-today.wday - 7 * week)
             end_of_week = start_of_week.days(6)
-            week_days = ["#{start_of_week.strftime("%d/%m")} - #{end_of_week.strftime("%d/%m")}".left(15).tc('black','white')]
+            week_days = ["#{start_of_week.ftime('daymonth')} - #{end_of_week.ftime('daymonth')}".left(15).tc('black','white')]
             0.upto(6) do |day_of_week|
               (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily start_of_week.days(day_of_week)
               worked_hours += total.to_i
               worked_days += 1 if !start.nil?
-              week_days << ((total.nil?) ? '' : p_time(total)).right(7).tc(cpick({:status => 'total', :date => total.to_i}))
+              week_days << ((total.nil?) ? '' : total.ftime).right(7).tc(cpick({:status => 'total', :date => total.to_i}))
             end
             puts week_days.join('|')
           end
@@ -356,12 +341,12 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           start_of_week = today.days(-today.wday)
           
           status_size = 83
-          puts today.strftime("%B %Y").center(status_size).tc('black', 'yellow', 'b')
+          puts today.ftime('monthyear').center(status_size).tc('black', 'yellow', 'b')
           
           week_days_header = []
           0.upto(6) do |wday|
             day = start_of_week.days(wday)
-            week_days_header << day.strftime("%a").center(11).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'green', 'b')
+            week_days_header << day.ftime('wday').center(11).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'green', 'b')
           end
           puts week_days_header.join('|')
           
@@ -382,7 +367,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week = []
           for i in (1...month.size)
             week << "".left(11) while month[i][0] > week.size
-            week << "#{i.to_s.right(4).tc('black', 'white')}#{(month[i][1].nil? ? '' : p_time(month[i][1])).right(7).tc(cpick({:status => 'total', :date => month[i][1].to_i}))}"
+            week << "#{i.to_s.right(4).tc('black', 'white')}#{(month[i][1].nil? ? '' : month[i][1].ftime).right(7).tc(cpick({:status => 'total', :date => month[i][1].to_i}))}"
             if month[i][0] == 6
               puts week.join('|')
               week = []

@@ -26,4 +26,17 @@ class Time
   def end_of_month
     Time.local(self.year, self.month+1) - 1
   end
+  
+  def ftime f='time'
+    case f
+      when 'datetime': self.strftime("%d/%m/%Y %H:%M")
+      when 'iso': self.strftime("%Y-%m-%d %H:%M")
+      when 'date': self.strftime("%d/%m/%Y")
+      when 'time': self.strftime("%H:%M")
+      when 'wday': self.strftime("%a")
+      when 'wdaydate': self.strftime("%a %d/%m")
+      when 'daymonth': self.strftime("%d/%m")
+      when 'monthyear': self.strftime("%B %Y")
+    end  
+  end
 end
