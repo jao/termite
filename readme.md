@@ -26,7 +26,7 @@ Screenshots:
 
 ### Clone the repository
 
-    git://github.com/jao/timesheet.git
+    git clone git://github.com/jao/timesheet.git
  
 ### Add the script's directory to your path
 
