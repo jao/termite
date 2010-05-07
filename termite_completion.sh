@@ -61,6 +61,7 @@ sick
 add
 edit
 update
+list
 report
 help"
 		return
