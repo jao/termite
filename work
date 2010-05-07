@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 
 # Command line Timesheet
-# Version: 0.1
+# Version: 0.5
 #
 # Author: joão paulo camargo
 # github: http://github.com/jao
 # 
-# This script is released under the MIT Licencse
+# This script is released under the MIT License
 # 
 # time tracker using sqlite
 # buit from scratch, command line only
@@ -21,12 +21,10 @@
 # 
 # == Requirements
 # rubygems
-# headline
 # sqlite3
 # 
 # == To do
 # - add the option to start and stop working more than once a day
-# - add reports by week and by month, and one day, maybe by year :P
 # 
 
 # Configuration
@@ -62,7 +60,7 @@ rescue Exception => e
   # create table if it doesn't exists yet
   puts "Running the script for the first time, creating table timesheet".banner.colorize('black', 'green')
   DB.execute("create table timesheet (timesheet_id integer primary key, date datetime, status text, comments text)")
-  table = DB.execute("analyze timesheet")
+  `work help`
 end
 
 class Entry
@@ -219,7 +217,7 @@ def list_header
     'date'.left(11),
     'time'.right(6),
     'comments'.left(75)
-  ].join('|').slice(0,WINDOW[0]).colorize(nil, nil, 'invert')
+  ].join('|').colorize(nil, nil, 'invert')
 end
 
 def list_row row
@@ -439,7 +437,6 @@ Please use "work add [start|back] [YYYY-mm-dd HH:MM], and try again."
               puts week.join('|')
               week = []
             end
-            # puts "#{i} #{month[i].inspect} #{week.size}"
           end
           if !week.empty?
             week << "".left(11) while week.size <= 6
@@ -458,9 +455,7 @@ Please use "work add [start|back] [YYYY-mm-dd HH:MM], and try again."
         DB.execute("drop table timesheet")
       end
     when 'help', /\w+/
-      # help
-      puts %{
-Usage: work [command] [[params]]
+      puts %{Usage: work [command] [[params]]
 Commands:
   start     Marks that you started working
   stop      Marks that you stopped working
