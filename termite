@@ -341,10 +341,10 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           today = now
           start_of_week = today.days(-today.wday)
           
-          puts today.strftime("%B %Y").center(83).tc('black', 'yellow')
+          puts today.strftime("%B %Y").center(83).tc('black', 'yellow', 'b')
           week_days_header = []
-          0.upto(6) do |day_of_week|
-            day = start_of_week.days(day_of_week)
+          0.upto(6) do |wday|
+            day = start_of_week.days(wday)
             week_days_header << day.strftime("%a").center(11).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'white')
           end
           puts week_days_header.join('|')
@@ -366,7 +366,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week = []
           for i in (1...month.size)
             week << "".left(11) while month[i][0] > week.size
-            week << "#{i.to_s.left(4).tc('black', 'white')}#{(month[i][1].nil? ? '' : p_time(month[i][1])).right(7).tc(cpick({:status => 'total', :date => month[i][1].to_i}))}"
+            week << "#{i.to_s.right(4).tc('black', 'white')}#{(month[i][1].nil? ? '' : p_time(month[i][1])).right(7).tc(cpick({:status => 'total', :date => month[i][1].to_i}))}"
             if month[i][0] == 6
               puts week.join('|')
               week = []
