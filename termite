@@ -263,7 +263,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           0.upto(7) do |count|
             (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily today
             
-            worked_hours += total.to_i
+            worked_hours += total.to_i if !total.nil?
             worked_days += 1 if !start.nil?
             
             puts [
