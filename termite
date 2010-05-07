@@ -389,7 +389,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       end
     when 'droptable'
       puts "Are you sure you want to drop your timesheet table? [y/N]"
-      puts 'WARNING: This cannot be undone!'.tc('yellow',nil,'blink')
+      puts 'WARNING: THIS CANNOT BE UNDONE!'.tc('yellow',nil,'blink')
       confirmation = STDIN.gets.chomp
       if confirmation =~ /y/i
         DB.execute("drop table timesheet")
