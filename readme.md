@@ -20,7 +20,7 @@ Screenshots:
 ## Requirements
 
 * rubygems
-* sqlite3
+* sqlite3-ruby
 
 ## Installation
 

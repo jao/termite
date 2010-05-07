@@ -46,7 +46,6 @@ rescue Exception => e
   # create table if it doesn't exists yet
   puts "Running the script for the first time, creating table timesheet".banner.tc('black', 'green')
   DB.execute("create table timesheet (timesheet_id integer primary key, date datetime, status text, comments text)")
-  `termite help`
 end
 
 def p_datetime t
@@ -115,7 +114,7 @@ def show_status
   if !row.nil?
     puts "#{row.status_message.tc('green')} since #{row.datetime.tc('green')}"
   else
-    puts 'Not found!'.tc('red')
+    puts 'No entry found! Cannot show status.'.tc('red')
   end
 end
 
