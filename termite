@@ -130,7 +130,7 @@ def show_status n
   if !row.nil?
     puts "#{row.status_message} since #{row.datetime}".left(n).tc('green', nil, 'b')
   else
-    puts "Unknown status. Please use 'termite start' to initialize the database.".left(n).tc('yellow', nil, 'b')
+    puts "Please use 'termite start' to initialize the database.".left(n).tc('yellow', nil, 'b')
   end
 end
 
