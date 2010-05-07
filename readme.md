@@ -1,7 +1,7 @@
 # Termite
 
-Version: 0.6
-Author: joão paulo camargo
+* Version: 0.6
+* Author: joão paulo camargo
 
 Termite is an open source time tracker ruby script/tool that uses sqlite. It is very simple, and it is meant for personal time management.
 Command line interface.
