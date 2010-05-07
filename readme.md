@@ -2,7 +2,7 @@
 Version: 0.5
 Author: joão paulo camargo
 
-Timesheet is an open source time tracker ruby script that uses sqlite. It is very simple, and it's meant for personal management only.
+Timesheet is an open source time tracker ruby script/tool that uses sqlite. It is very simple, and it is meant for personal time management.
 Command line interface.
 
 Screenshots:
@@ -48,17 +48,29 @@ open the work script file, and change the following constants as you see fit.
 If you want a very simple command completion for the work script, you can add the following to your .bash_profile.
 
     source /path/to/timesheet/work_completion.sh
-  
-### Change the script at your own risk, no support available.
+
+## For multiple computers
+
+If you plan to use this in more than one computer, I would recommend that you use dropbox. Move the database there, and create a symbolic link inside this script's directory.
+Something like this:
+
+    mv work.db ~/Dropbox/work.db
+    ln -s ~/Dropbox/work.db work.db
+
+[Signup to dropbox](https://www.dropbox.com/referrals/NTIyMDkwMTA5) if you don't have an account yet, this is [my referral link](https://www.dropbox.com/referrals/NTIyMDkwMTA5) - which means if you signup using it, we both get higher space quota.
 
 ## To do
 
+* add a config file option (at the user's home directory)
 * add the option to start and stop working more than once a day
-* add better reports
-* add an export feature to pdf, csv, etc.
+* add the support to projects, and maybe reports based on projects
+* make better reports
+* add an export feature to convert the reports to pdf, csv, etc.
 
 ## License
 
 Timesheet is released under the MIT license and is copyright (c) 2010 [Code 42](http://code42.com.br)
 
 [Read the license](http://github.com/jao/timesheet/master/LICENSE)
+
+### Change the script at your own risk.
