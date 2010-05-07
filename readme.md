@@ -32,7 +32,16 @@ Screenshots:
 
 Run the script for the first time, the database should be created automatically in the same directory of the script. (Make sure the script has permission to write inside the directory)
 
-### If you don't use Adium, open the work script file, and set @ADIUM=false@
+### For Adium support
+
+open the work script file, and change the following constants as you see fit.
+
+    ADIUM=true
+    ADIUM_AVAILABLE='I am here'
+    ADIUM_LUNCH='Out to lunch'
+    ADIUM_AWAY='Be right back'
+    ADIUM_SICK='I am sick'
+    ADIUM_STOP='Going home'
 
 ### Command completion
 
