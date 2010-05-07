@@ -14,7 +14,7 @@
 # Configuration
 
 # database file name
-DB_NAME = 'work.db'
+DB_NAME = 'termite.db'
 
 # work related configuration
 MINIMUM_LUNCH_DURATION = 3600 # 1 hour in seconds

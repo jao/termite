@@ -1,4 +1,4 @@
-# Command line Timesheet
+# Termite
 Version: 0.5
 Author: joão paulo camargo
 
