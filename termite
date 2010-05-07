@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 
-# Command line Timesheet
-# Version: 0.5
+# Termite
+# command line time tracker
+# Version: 0.6
 # Author: joão paulo camargo
 # 
 # This script is released under the MIT License
@@ -16,7 +17,7 @@
 # database file name
 DB_NAME = 'termite.db'
 
-# work related configuration
+# termite related configuration
 MINIMUM_LUNCH_DURATION = 3600 # 1 hour in seconds
 FIX3 = 10800 # FIXME: issue with time calculations vs. timezone
 
@@ -45,7 +46,7 @@ rescue Exception => e
   # create table if it doesn't exists yet
   puts "Running the script for the first time, creating table timesheet".banner.tc('black', 'green')
   DB.execute("create table timesheet (timesheet_id integer primary key, date datetime, status text, comments text)")
-  `work help`
+  `termite help`
 end
 
 def p_datetime t
@@ -193,7 +194,7 @@ begin
       else
         puts %{
 Error, you forgot to log you were leaving work, cannot add a sick day.
-Please use "work add stop [YYYY-mm-dd HH:MM], and try again."
+Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
 }
       end
     when 'start'
@@ -204,7 +205,7 @@ Please use "work add stop [YYYY-mm-dd HH:MM], and try again."
       else
         puts %{
 Error, you forgot to log you were leaving work, cannot start.
-Please use "work add stop [YYYY-mm-dd HH:MM], and try again."
+Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
 }
       end
     when 'lunch'
@@ -215,7 +216,7 @@ Please use "work add stop [YYYY-mm-dd HH:MM], and try again."
       else
         puts %{
 Error, you forgot to log you were working, cannot go to lunch.
-Please use "work add start [YYYY-mm-dd HH:MM], and try again."
+Please use "termite add start [YYYY-mm-dd HH:MM], and try again."
 }
       end
     when 'back'
@@ -226,7 +227,7 @@ Please use "work add start [YYYY-mm-dd HH:MM], and try again."
       else
         puts %{
 Error, you forgot to log you having lunch, cannot come back.
-Please use "work add lunch [YYYY-mm-dd HH:MM], and try again."
+Please use "termite add lunch [YYYY-mm-dd HH:MM], and try again."
 }
       end
     when 'stop'
@@ -237,7 +238,7 @@ Please use "work add lunch [YYYY-mm-dd HH:MM], and try again."
       else
         puts %{
 Error, you forgot to log you were working or back from lunch, cannot stop.
-Please use "work add [start|back] [YYYY-mm-dd HH:MM], and try again."
+Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
 }
       end
     when 'report'
@@ -363,7 +364,7 @@ Please use "work add [start|back] [YYYY-mm-dd HH:MM], and try again."
         DB.execute("drop table timesheet")
       end
     when 'help', /\w+/
-      puts %{Usage: work [command] [[params]]
+      puts %{Usage: termite [command] [[params]]
 Commands:
   start     Marks that you started working
   stop      Marks that you stopped working

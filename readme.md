@@ -1,21 +1,21 @@
 # Termite
-Version: 0.5
+Version: 0.6
 Author: joão paulo camargo
 
-Timesheet is an open source time tracker ruby script/tool that uses sqlite. It is very simple, and it is meant for personal time management.
+Termite is an open source time tracker ruby script/tool that uses sqlite. It is very simple, and it is meant for personal time management.
 Command line interface.
 
 Screenshots:
 
-![work help](http://cl.ly/wiR/content)
+![termite help](http://cl.ly/wiR/content)
 
-![work list](http://cl.ly/wtv/content)
+![termite list](http://cl.ly/wtv/content)
 
-![work report daily](http://cl.ly/xsh/content)
+![termite report daily](http://cl.ly/xsh/content)
 
-![work report weekly](http://cl.ly/xpJ/content)
+![termite report weekly](http://cl.ly/xpJ/content)
 
-![work report montly](http://cl.ly/x41/content)
+![termite report montly](http://cl.ly/x41/content)
 
 ## Requirements
 
@@ -26,15 +26,16 @@ Screenshots:
 
 ### Clone the repository
 
-    git clone git://github.com/jao/timesheet.git
+    git clone git://github.com/jao/termite.git
  
 ### Add the script's directory to your path
 
-Run the script for the first time, the database should be created automatically in the same directory of the script. (Make sure the script has permission to write inside the directory)
+Run the script for the first time, the database should be created automatically in the same directory of the script. (Make sure the script has permission to write inside the directory, and the script itself is executable)
+Add the script's directory to your path for easier use of this tool.
 
 ### For Adium support
 
-open the work script file, and change the following constants as you see fit.
+open the termite script file, and change the following constants as you see fit.
 
     ADIUM=true
     ADIUM_AVAILABLE='I am here'
@@ -47,15 +48,15 @@ open the work script file, and change the following constants as you see fit.
 
 If you want a very simple command completion for the work script, you can add the following to your .bash_profile.
 
-    source /path/to/timesheet/work_completion.sh
+    source /path/to/termite/termite_completion.sh
 
 ## For multiple computers
 
 If you plan to use this in more than one computer, I would recommend that you use dropbox. Move the database there, and create a symbolic link inside this script's directory.
 Something like this:
 
-    mv work.db ~/Dropbox/work.db
-    ln -s ~/Dropbox/work.db work.db
+    mv termite.db ~/Dropbox/termite.db
+    ln -s ~/Dropbox/termite.db termite.db
 
 [Signup to dropbox](https://www.dropbox.com/referrals/NTIyMDkwMTA5) if you don't have an account yet, please consider using my [my referral link](https://www.dropbox.com/referrals/NTIyMDkwMTA5) because if you do we both get a higher storage quota.
 
@@ -70,7 +71,7 @@ Something like this:
 
 ## License
 
-Timesheet is released under the MIT license and is copyright (c) 2010 [Code 42](http://code42.com.br)
+Termite is released under the MIT license and is copyright (c) 2010 [Code 42](http://code42.com.br)
 
 [Read the license](http://github.com/jao/timesheet/master/LICENSE)
 
