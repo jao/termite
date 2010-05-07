@@ -1,0 +1,482 @@
+#!/usr/bin/env ruby
+
+# Command line Timesheet
+# Version: 0.1
+#
+# Author: joão paulo camargo
+# github: http://github.com/jao
+# 
+# This script is released under the MIT Licencse
+# 
+# time tracker using sqlite
+# buit from scratch, command line only
+# 
+# == Installation
+# put the script in a directory and add the directory to your PATH,
+# or put the files in a directory you already use for common scripts
+# 
+# Run the script for the first time, the database should be created
+# because it will go to the rescue which creates the table the script
+# uses.
+# 
+# == Requirements
+# rubygems
+# headline
+# sqlite3
+# 
+# == To do
+# - add the option to start and stop working more than once a day
+# - add reports by week and by month, and one day, maybe by year :P
+# 
+
+# Configuration
+
+# database file name
+DB_NAME = 'work.db'
+
+# work related configuration
+MINIMUM_LUNCH_DURATION = 3600 # 1 hour in seconds
+FIX3 = 10800 # FIXME: issue with time calculations vs. timezone
+
+# Adium config (set ADIUM to false if you don't want to use this feature)
+ADIUM=true
+ADIUM_AVAILABLE='http://jpcamargo.com'
+ADIUM_LUNCH='Out to lunch'
+ADIUM_AWAY='Be right back'
+ADIUM_SICK='I am sick'
+ADIUM_STOP='Going home'
+
+# 
+# Script starts here (change it if you want to)
+# 
+
+$LOAD_PATH << File.dirname(__FILE__)
+require 'util.rb'
+require 'sqlite3'
+
+# create or select the database
+DB = SQLite3::Database.new(File.dirname(__FILE__)+"/"+DB_NAME)
+begin
+  table = DB.execute("analyze timesheet")
+rescue Exception => e
+  # create table if it doesn't exists yet
+  puts "Running the script for the first time, creating table timesheet".banner.colorize('black', 'green')
+  DB.execute("create table timesheet (timesheet_id integer primary key, date datetime, status text, comments text)")
+  table = DB.execute("analyze timesheet")
+end
+
+class Entry
+  attr_accessor :timesheet_id, :status, :unixtime, :comments
+  def initialize args=[]
+    return nil if args.empty?
+    @timesheet_id = args[0].to_i
+    @status = args[2]
+    @unixtime = args[1].to_i
+    @comments = args[3].to_s
+  end
+  
+  def to_i; unixtime; end
+  def to_s; status; end
+  def date; Time.at(unixtime).strftime("%d/%m/%Y"); end
+  def time; Time.at(unixtime).strftime("%H:%M"); end
+  def datetime; Time.at(unixtime).strftime("%d/%m/%Y %H:%M"); end
+  
+  def status_message
+    return case status
+      when 'start': 'Working'
+      when 'lunch': 'Having lunch'
+      when 'back': 'Back working'
+      when 'stop': 'Out for the day'
+      else 'Confused'
+    end
+  end
+  
+  def self.find args={}
+    sql = "select * from timesheet"
+    sql += conditions(args[:conditions]) if args.key?(:conditions)
+    sql += order(args[:order]) if args.key?(:order)
+    sql += limit(args[:limit]) if args.key?(:limit)
+    # puts sql
+    rows = DB.execute(sql)
+    if !rows.empty?
+      rows.map{|row| new(row)}
+    else
+      []
+    end
+  end
+  
+  def self.last
+    find({:order => 'date desc', :limit => 1}).first
+  end
+  
+  def self.create args={}
+    DB.execute("insert into timesheet (date, status) values(#{args[:date]},'#{args[:status]}')")
+  end
+  
+  def self.update args={}
+    DB.execute("update timesheet set #{fields_to_update(args[:fields])} #{conditions(args[:conditions])}")
+  end
+  
+  def self.conditions(args); return build_sql(args, 'where', ' and '); end
+  def self.order(args); return build_sql(args, 'order by'); end
+  def self.limit(args); return build_sql(args, 'limit');end
+  def self.fields_to_update(args); return build_sql(args); end
+  
+  def self.build_sql args, action='', delimiter=', '
+    return '' if args == '' or (args.is_a?(Array) and args.empty?)
+    " #{action} #{args.is_a?(Array) ? args.join(delimiter) : args}"
+  end
+  
+  def self.report_daily time
+    start = lunch = back = stop = lunch_duration = total = nil
+    rows = find({:conditions => "date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}"})
+    if !rows.empty?
+      rows.each {|row| eval("#{row.status} = row")}
+      stop = time if stop.nil?
+      lunch_duration = (!back.nil? and !lunch.nil?) ? back.to_i - lunch.to_i : (!lunch.nil?) ? time.to_i - lunch.to_i : 0
+      req_lunch_duration = (lunch_duration >= MINIMUM_LUNCH_DURATION or stop == time) ? lunch_duration : MINIMUM_LUNCH_DURATION
+      lunch_duration = Time.at(lunch_duration + FIX3)
+      total = Time.at(stop.to_i - start.to_i - req_lunch_duration + FIX3)
+    end
+    return [start, lunch, back, stop, lunch_duration, total]
+  end
+end
+
+def p_datetime t
+  return '' unless Time === t
+  t.strftime("%d/%m/%Y %H:%M")
+end
+
+def p_date t
+  return '' unless Time === t
+  t.strftime("%d/%m/%Y")
+end
+
+def p_time t
+  return '' unless Time === t
+  t.strftime("%H:%M")
+end
+
+def cpick args
+  time = Time.at(args[:date])
+  return 'cyan' if [0,6].include? time.wday
+  case args[:status]
+    when 'sick'
+      'pink'
+    when 'start'
+      ('white' if time.hour == 9) ||
+      ('green' if time.hour == 10) ||
+      ('yellow' if time.hour == 11) ||
+      'red'
+    when 'stop'
+      ('white' if time.hour == 18) ||
+      ('green' if time.hour == 19) ||
+      ('yellow' if time.hour == 20) ||
+      'red'
+    when 'lunch'
+      ('white' if time.hour == 12) ||
+      ('green' if time.hour == 13) ||
+      ('yellow' if time.hour == 14) ||
+      'red'
+    when 'back'
+      ('white' if time.hour == 13) ||
+      ('green' if time.hour == 14) ||
+      ('yellow' if time.hour == 15) ||
+      'red'
+    when 'lunch_duration'
+      ('white' if time.hour < 1) ||
+      ('green' if time.hour == 1 and time.min < 15) ||
+      ('yellow' if time.hour >= 1 and time.min <= 30) ||
+      'red'
+    when 'total'
+      ('white' if time.hour == 8) ||
+      ('green' if time.hour == 9) ||
+      ('yellow' if time.hour == 10 or time.hour <= 7) ||
+      'red'
+    else
+      'white'
+  end
+end
+
+def set_adium_status status, msg=''
+  return if !ADIUM or status == ''
+  `osascript -e 'tell application "Adium" to go #{status} #{'with message "'+ msg +'"' if msg != ''}' 2>/dev/null`
+end
+
+def show_status
+  row = Entry.last
+  if !row.nil?
+    puts "#{row.status_message.colorize('green')} since #{row.datetime.colorize('green')}"
+  else
+    puts 'Not found!'.colorize('red')
+  end
+end
+
+def list_header
+  [
+    'id'.right(7),
+    'status'.left(7),
+    'date'.left(11),
+    'time'.right(6),
+    'comments'.left(75)
+  ].join('|').slice(0,WINDOW[0]).colorize(nil, nil, 'invert')
+end
+
+def list_row row
+  [
+    row.timesheet_id.to_s.right(7),
+    row.status.left(7),
+    row.date.left(11),
+    row.time.right(6).colorize(cpick({:status => row.status, :date => row.to_i})),
+    row.comments.slice(0,73).left(75)
+  ].join('|')
+end
+
+# now deal with the commands
+begin
+  now = Time.now
+  case arg = ARGV.shift
+    when 'add'
+      command = ARGV[0]
+      date = Time.parse(ARGV[1])
+      if ['start','stop','lunch','back'].include?(command) and Time === date
+        Entry.create({:date => date.to_i, :status => command})
+      end
+    when 'edit'
+      id = ARGV[0]
+      date = Time.parse(ARGV[1])
+      if Time === date
+        row = Entry.find({:conditions => "timesheet_id=#{id}"})
+        if !row.nil?
+          puts list_header
+          puts list_row(row)
+          puts ""
+          puts "are you sure you want to change the date in this entry to '#{date.strftime("%Y-%m-%d %H:%M")}'? [y/N]".warning
+          confirmation = STDIN.gets.chomp
+          if confirmation =~ /y/i
+            Entry.update({:conditions => "timesheet_id=#{id}", :fields => "date=#{date.to_i}"})
+          end
+        end
+      else
+        puts "The correct date format is YYYY-mm-dd HH:MM".banner.warning
+      end
+    when 'update'
+      row = Entry.last
+      if !row.nil?
+        puts list_header
+        puts list_row(row)
+        puts ""
+        puts "are you sure you want to change the date in this entry to '#{now.strftime("%Y-%m-%d %H:%M")}'? [y/N]".warning
+        confirmation = STDIN.gets.chomp
+        if confirmation =~ /y/i
+          Entry.update({:conditions => "timesheet_id=#{row.timesheet_id}", :fields => "date=#{now.to_i}"})
+        end
+      end
+    when 'list'
+      rows = Entry.find({:order => 'date desc', :limit => ARGV.shift || 14})
+      puts list_header
+      rows.each do |row|
+        puts list_row(row)
+      end
+    when 'sick'
+      row = Entry.last
+      if !row.nil? and row.status == 'stop'
+        today = Time.local(now.year,now.month,now.day)
+        Entry.create({:date => today.to_i, :status => arg})
+        set_adium_status('away', ADIUM_SICK)
+      else
+        puts %{
+Error, you forgot to log you were leaving work, cannot add a sick day.
+Please use "work add stop [YYYY-mm-dd HH:MM], and try again."
+}
+      end
+    when 'start'
+      row = Entry.last
+      if !row.nil? and row.status == 'stop'
+        Entry.create({:date => now.to_i, :status => arg})
+        set_adium_status('available', ADIUM_AVAILABLE)
+      else
+        puts %{
+Error, you forgot to log you were leaving work, cannot start.
+Please use "work add stop [YYYY-mm-dd HH:MM], and try again."
+}
+      end
+    when 'lunch'
+      row = Entry.last
+      if !row.nil? and row.status == 'start'
+        Entry.create({:date => now.to_i, :status => arg})
+        set_adium_status('away', ADIUM_LUNCH)
+      else
+        puts %{
+Error, you forgot to log you were working, cannot go to lunch.
+Please use "work add start [YYYY-mm-dd HH:MM], and try again."
+}
+      end
+    when 'back'
+      row = Entry.last
+      if !row.nil? and row.status == 'lunch'
+        Entry.create({:date => now.to_i, :status => arg})
+        set_adium_status('available', ADIUM_AVAILABLE)
+      else
+        puts %{
+Error, you forgot to log you having lunch, cannot come back.
+Please use "work add lunch [YYYY-mm-dd HH:MM], and try again."
+}
+      end
+    when 'stop'
+      row = Entry.last
+      if !row.nil? and ['start','back'].include?(row.status)
+        Entry.create({:date => now.to_i, :status => arg})
+        set_adium_status('away', ADIUM_STOP)
+      else
+        puts %{
+Error, you forgot to log you were working or back from lunch, cannot stop.
+Please use "work add [start|back] [YYYY-mm-dd HH:MM], and try again."
+}
+      end
+    when 'report'
+      period = ARGV.shift
+      period ||= 'daily'
+      case period
+        when 'daily'
+          # daily report
+          current = now.day.to_i
+          puts [
+            'day'.left(11),
+            'started'.right(10),
+            'lunch'.right(10),
+            'back'.right(10),
+            'stopped'.right(10),
+            '@lunch'.right(10),
+            'worked'.right(10)
+          ].join('|').colorize('black','white','bold')
+          worked_hours = 0
+          worked_days = 0
+          
+          today = now
+          0.upto(7) do |count|
+            (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily today
+            
+            worked_hours += total.to_i
+            worked_days += 1 if !start.nil?
+            
+            puts [
+              today.strftime("%a %d/%m").left(11).colorize(([0,6].include? today.wday) ? 'cyan' : 'white'),
+              ((start.nil?) ? '' : start.time).right(10).colorize(cpick({:status => 'start', :date => start.to_i})),
+              ((lunch.nil?) ? '' : lunch.time).right(10).colorize(cpick({:status => 'lunch', :date => lunch.to_i})),
+              ((back.nil?) ? '' : back.time).right(10).colorize(cpick({:status => 'back', :date => back.to_i})),
+              ((stop.nil? or stop==now) ? '' : stop.time).right(10).colorize(cpick({:status => 'stop', :date => stop.to_i})),
+              ((lunch_duration.to_i > 0) ? lunch_duration.strftime("%H:%M") : '').right(10).colorize(cpick({:status => 'lunch_duration', :date => lunch_duration.to_i})),
+              ((total.nil?) ? '' : p_time(total)).right(10).colorize(cpick({:status => 'total', :date => total.to_i}))
+            ].join('|')
+            today = today.yesterday
+          end
+          total = Time.at(worked_hours)
+          average = Time.at(worked_hours/worked_days)
+          puts "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)".left(38).colorize('black','white','bold')+"Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours".right(39).colorize('black','white','bold')
+        when 'weekly'
+          today = now
+          start_of_week = today.days(-today.wday)
+          
+          week_days_header = ["".left(15).colorize('black','white')]
+          0.upto(6) do |day_of_week|
+            day = start_of_week.days(day_of_week)
+            week_days_header << day.strftime("%a").center(7).colorize('black', [0,6].include?(day.wday) ? 'cyan' : 'white')
+          end
+          puts week_days_header.join("|")
+          
+          # total values
+          worked_hours = 0
+          worked_days = 0
+          
+          0.upto(3) do |week|
+            start_of_week = today.days(-today.wday - 7 * week)
+            end_of_week = start_of_week.days(6)
+            week_days = ["#{start_of_week.strftime("%d/%m")} - #{end_of_week.strftime("%d/%m")}".left(15).colorize('black','white')]
+            0.upto(6) do |day_of_week|
+              (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily start_of_week.days(day_of_week)
+              worked_hours += total.to_i
+              worked_days += 1 if !start.nil?
+              week_days << ((total.nil?) ? '' : p_time(total)).right(7).colorize(cpick({:status => 'total', :date => total.to_i}))
+            end
+            puts week_days.join('|')
+          end
+          
+          total = Time.at(worked_hours)
+          average = Time.at(worked_hours/worked_days)
+          puts "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)".left(35).colorize('black','white','bold')+"Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours".right(36).colorize('black','white','bold')
+        when 'monthly'
+          today = now
+          start_of_week = today.days(-today.wday)
+          
+          puts today.strftime("%B %Y").center(83).colorize('black', 'yellow')
+          week_days_header = []
+          0.upto(6) do |day_of_week|
+            day = start_of_week.days(day_of_week)
+            week_days_header << day.strftime("%a").center(11).colorize('black', [0,6].include?(day.wday) ? 'cyan' : 'white')
+          end
+          puts week_days_header.join('|')
+          
+          month = []
+          # total values
+          worked_hours = 0
+          worked_days = 0
+          
+          day = start_of_month = today.start_of_month
+          while day.month == today.month
+            (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily day
+            worked_hours += total.to_i
+            worked_days += 1 if !start.nil?
+            month[day.day] = [day.wday, total]
+            day = day.tomorrow
+          end
+          
+          week = []
+          for i in (1...month.size)
+            week << "".left(11) while month[i][0] > week.size
+            week << "#{i.to_s.left(4).colorize('black', 'white')}#{(month[i][1].nil? ? '' : p_time(month[i][1])).right(7).colorize(cpick({:status => 'total', :date => month[i][1].to_i}))}"
+            if month[i][0] == 6
+              puts week.join('|')
+              week = []
+            end
+            # puts "#{i} #{month[i].inspect} #{week.size}"
+          end
+          if !week.empty?
+            week << "".left(11) while week.size <= 6
+            puts week.join('|')
+          end
+          
+          total = Time.at(worked_hours)
+          average = Time.at(worked_hours/worked_days)
+          puts "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)".left(41).colorize('black','white','bold')+"Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours".right(42).colorize('black','white','bold')
+      end
+    when 'droptable'
+      puts "Are you sure you want to drop your timesheet table? [y/N]"
+      puts 'WARNING: This cannot be undone!'.colorize('yellow',nil,'blink')
+      confirmation = STDIN.gets.chomp
+      if confirmation =~ /y/i
+        DB.execute("drop table timesheet")
+      end
+    when 'help', /\w+/
+      # help
+      puts %{
+Usage: work [command] [[params]]
+Commands:
+  start     Marks that you started working
+  stop      Marks that you stopped working
+  lunch     Marks that you are out to lunch
+  back      Marks that you are back from lunch
+  sick      Marks that you are sick for the day
+  list      List the last n entries
+  add       Adds a new entry, used to add times for previous dates and times
+  edit      Updates an entry by the given id with given date
+  update    Updates the last entry, setting the date and time to now
+  report    Shows a report of the latest information
+  help      Shows this message
+}
+  end
+  show_status
+  DB.close
+rescue Exception => e
+  puts "An error ocurred #{e.message}\n  #{e.backtrace.join("\n  ")}".error
+end
