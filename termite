@@ -19,7 +19,7 @@ DB_NAME = 'termite.db'
 
 # termite related configuration
 MINIMUM_LUNCH_DURATION = 3600 # 1 hour in seconds
-FIX3 = 10800 # FIXME: issue with time calculations vs. timezone
+FIX_TIME = 10800 # FIXME: issue with time calculations vs. timezone
 
 # Adium config (set ADIUM to false if you don't want to use this feature)
 ADIUM=true
