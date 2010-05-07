@@ -125,12 +125,12 @@ def set_adium_status status, msg=''
   `osascript -e 'tell application "Adium" to go #{status} #{'with message "'+ msg +'"' if msg != ''}' 2>/dev/null`
 end
 
-def show_status
+def show_status n
   row = Entry.last
   if !row.nil?
-    puts "#{row.status_message.tc('green')} since #{row.datetime.tc('green')}"
+    puts "#{row.status_message} since #{row.datetime}".left(n).tc('green', nil, 'b')
   else
-    puts "Current status: Unknown. Please use 'termite start' to initialize the database.".tc('yellow', nil, 'b')
+    puts "Unknown status. Please use 'termite start' to initialize the database.".left(n).tc('yellow', nil, 'b')
   end
 end
 
@@ -157,6 +157,7 @@ end
 # now deal with the commands
 begin
   now = Time.now
+  status_size = 60
   case arg = ARGV.shift
     when 'add'
       command = ARGV[0]
@@ -298,10 +299,13 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           total = Time.at(worked_hours)
           average = Time.at(worked_hours/worked_days) if worked_days > 0
           
+          status_size = 77
+          
           footer = ''
           footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(38).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(39).tc('black','white','bold')
           puts footer if worked_days > 0 or worked_hours > 0
+          puts ""
         when 'weekly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -333,10 +337,13 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           total = Time.at(worked_hours)
           average = Time.at(worked_hours/worked_days) if worked_days > 0
           
+          status_size = 71
+          
           footer = ''
           footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(35).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(36).tc('black','white','bold')
           puts footer if worked_days > 0 or worked_hours > 0
+          puts ""
         when 'monthly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -380,10 +387,13 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           total = Time.at(worked_hours)          
           average = Time.at(worked_hours/worked_days) if worked_days > 0
           
+          status_size = 83
+          
           footer = ''
           footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(41).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(42).tc('black','white','bold')
           puts footer if worked_days > 0 or worked_hours > 0
+          puts ""
       end
     when 'droptable'
       puts "Are you sure you want to drop your timesheet table? [y/N]"
@@ -395,7 +405,9 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
     when 'help', /\w+/
       puts help_message
   end
-  show_status unless ARGV.include?('--no-status')
+  unless ARGV.include?('--no-status')
+    show_status(status_size)
+  end
   DB.close
 rescue Exception => e
   puts "An error ocurred #{e.message}\n  #{e.backtrace.join("\n  ")}".error
