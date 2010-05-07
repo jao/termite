@@ -47,7 +47,7 @@ open the work script file, and change the following constants as you see fit.
 
 If you want a very simple command completion for the work script, you can add the following to your .bash_profile.
 
-    source /path/to/timesheet/.work_completion.sh
+    source /path/to/timesheet/work_completion.sh
   
 ### Change the script at your own risk, no support available.
 
