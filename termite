@@ -200,7 +200,7 @@ begin
       rows = Entry.find({:order => 'date desc', :limit => limit})
       status_size = 112
       unless ARGV.include?('--no-header')
-        puts "Entries list - last #{rows.size} entries".center(status_size).tc('black', 'yellow', 'b')
+        puts "Entries list - #{rows.size} entrie(s)".center(status_size).tc('black', 'yellow', 'b')
         puts list_header
       end
       rows.each do |row|
