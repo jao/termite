@@ -137,17 +137,17 @@ end
 def list_header
   [
     'id'.right(7),
-    'status'.left(7),
+    'status'.left(8),
     'date'.left(11),
-    'time'.right(6),
+    'time'.left(7),
     'comments'.left(75)
-  ].join('|').tc(nil, nil, 'invert')
+  ].join('|').tc(nil, nil, 'b').tc(nil, nil, 'invert')
 end
 
 def list_row row
   [
     row.timesheet_id.to_s.right(7),
-    row.status.left(7),
+    row.status.left(8),
     row.date.left(11),
     row.time.right(6).tc(cpick({:status => row.status, :date => row.to_i})),
     row.comments.slice(0,73).left(75)
@@ -196,11 +196,17 @@ begin
         end
       end
     when 'list'
-      rows = Entry.find({:order => 'date desc', :limit => (ARGV[0] =~ /\d+/) ? ARGV.shift : 14})
-      puts list_header unless ARGV.include?('--no-header')
+      limit = (ARGV[0] =~ /\d+/) ? ARGV.shift : 14
+      rows = Entry.find({:order => 'date desc', :limit => limit})
+      status_size = 112
+      unless ARGV.include?('--no-header')
+        puts "Entries list - last #{rows.size} entries".center(status_size).tc('black', 'yellow', 'b')
+        puts list_header
+      end
       rows.each do |row|
         puts list_row(row)
       end
+      puts ""
     when 'sick'
       row = Entry.last
       if !row.nil? and row.status == 'stop'
@@ -263,6 +269,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       case period
         when 'daily'
           # daily report
+          status_size = 77
+          puts "Daily report".center(status_size).tc('black', 'yellow', 'b')
           current = now.day.to_i
           puts [
             'day'.left(11),
@@ -299,8 +307,6 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           total = Time.at(worked_hours)
           average = Time.at(worked_hours/worked_days) if worked_days > 0
           
-          status_size = 77
-          
           footer = ''
           footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(38).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(39).tc('black','white','bold')
@@ -309,6 +315,9 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
         when 'weekly'
           today = now
           start_of_week = today.days(-today.wday)
+          
+          status_size = 71
+          puts "Weekly report".center(status_size).tc('black', 'yellow', 'b')
           
           week_days_header = ["".left(15).tc('black','white')]
           0.upto(6) do |day_of_week|
@@ -337,8 +346,6 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           total = Time.at(worked_hours)
           average = Time.at(worked_hours/worked_days) if worked_days > 0
           
-          status_size = 71
-          
           footer = ''
           footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(35).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(36).tc('black','white','bold')
@@ -348,7 +355,9 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           today = now
           start_of_week = today.days(-today.wday)
           
-          puts today.strftime("%B %Y").center(83).tc('black', 'yellow', 'b')
+          status_size = 83
+          puts today.strftime("%B %Y").center(status_size).tc('black', 'yellow', 'b')
+          
           week_days_header = []
           0.upto(6) do |wday|
             day = start_of_week.days(wday)
@@ -386,8 +395,6 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           
           total = Time.at(worked_hours)          
           average = Time.at(worked_hours/worked_days) if worked_days > 0
-          
-          status_size = 83
           
           footer = ''
           footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(41).tc('black','white','bold')
