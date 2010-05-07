@@ -57,11 +57,12 @@ Something like this:
     mv work.db ~/Dropbox/work.db
     ln -s ~/Dropbox/work.db work.db
 
-[Signup to dropbox](https://www.dropbox.com/referrals/NTIyMDkwMTA5) if you don't have an account yet, this is [my referral link](https://www.dropbox.com/referrals/NTIyMDkwMTA5) - which means if you signup using it, we both get higher space quota.
+[Signup to dropbox](https://www.dropbox.com/referrals/NTIyMDkwMTA5) if you don't have an account yet, please consider using my [my referral link](https://www.dropbox.com/referrals/NTIyMDkwMTA5) because if you do we both get a higher storage quota.
 
 ## To do
 
 * add a config file option (at the user's home directory)
+* add database migration-like updates
 * add the option to start and stop working more than once a day
 * add the support to projects, and maybe reports based on projects
 * make better reports
@@ -74,3 +75,5 @@ Timesheet is released under the MIT license and is copyright (c) 2010 [Code 42](
 [Read the license](http://github.com/jao/timesheet/master/LICENSE)
 
 ### Change the script at your own risk.
+
+If you want to give me tips, ideas, or instructions on how to improve this, feel free to contact me using [timesheet (at) code42.com.br](mailto:timesheet@code42.com.br).
