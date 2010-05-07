@@ -114,7 +114,7 @@ def show_status
   if !row.nil?
     puts "#{row.status_message.tc('green')} since #{row.datetime.tc('green')}"
   else
-    puts 'Current status: Unknow. Please use termite start to initialize the database.'.tc('yellow',)
+    puts 'Current status: Unknow. Please use termite start to initialize the database.'.tc('yellow', nil, 'b')
   end
 end
 
