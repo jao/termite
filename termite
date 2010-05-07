@@ -280,7 +280,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           total = Time.at(worked_hours)
           average = Time.at(worked_hours/worked_days) if worked_days > 0
           footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(38).tc('black','white','bold')
-          footer += "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours".right(39).tc('black','white','bold')
+          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(39).tc('black','white','bold')
           puts footer
         when 'weekly'
           today = now
@@ -314,7 +314,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at(worked_hours/worked_days) if worked_days > 0
 
           footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(35).tc('black','white','bold')
-          footer += "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours".right(36).tc('black','white','bold')
+          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(36).tc('black','white','bold')
           puts footer
         when 'monthly'
           today = now
@@ -360,7 +360,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at(worked_hours/worked_days) if worked_days > 0
 
           footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(41).tc('black','white','bold')
-          footer += "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours".right(42).tc('black','white','bold')
+          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(42).tc('black','white','bold')
           puts footer
       end
     when 'droptable'
