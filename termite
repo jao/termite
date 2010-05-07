@@ -33,6 +33,21 @@ ADIUM_STOP='Going home'
 # Script starts here (change it if you want to)
 # 
 
+help_message = %{Usage: termite [command] [[params]]
+Commands:
+start     Marks that you started working
+stop      Marks that you stopped working
+lunch     Marks that you are out to lunch
+back      Marks that you are back from lunch
+sick      Marks that you are sick for the day
+list      List the last n entries
+add       Adds a new entry, used to add times for previous dates and times
+edit      Updates an entry by the given id with given date
+update    Updates the last entry, setting the date and time to now
+report    Shows a report of the latest information
+help      Shows this message
+}
+
 $LOAD_PATH << File.dirname(__FILE__)
 require 'util.rb'
 require 'sqlite3'
@@ -46,6 +61,7 @@ rescue Exception => e
   # create table if it doesn't exists yet
   puts "Running the script for the first time, creating table timesheet".banner.tc('black', 'green')
   DB.execute("create table timesheet (timesheet_id integer primary key, date datetime, status text, comments text)")
+  puts help_message
 end
 
 def p_datetime t
@@ -256,6 +272,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             '@lunch'.right(10),
             'worked'.right(10)
           ].join('|').tc('black','white','bold')
+          
+          # total values
           worked_hours = 0
           worked_days = 0
           
@@ -279,9 +297,11 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           end
           total = Time.at(worked_hours)
           average = Time.at(worked_hours/worked_days) if worked_days > 0
+          
+          footer = ''
           footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(38).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(39).tc('black','white','bold')
-          puts footer
+          puts footer if worked_days > 0 or worked_hours > 0
         when 'weekly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -312,10 +332,11 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           
           total = Time.at(worked_hours)
           average = Time.at(worked_hours/worked_days) if worked_days > 0
-
-          footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(35).tc('black','white','bold')
+          
+          footer = ''
+          footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(35).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(36).tc('black','white','bold')
-          puts footer
+          puts footer if worked_days > 0 or worked_hours > 0
         when 'monthly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -328,11 +349,11 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           end
           puts week_days_header.join('|')
           
-          month = []
           # total values
           worked_hours = 0
           worked_days = 0
           
+          month = []          
           day = start_of_month = today.start_of_month
           while day.month == today.month
             (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily day
@@ -358,10 +379,11 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           
           total = Time.at(worked_hours)          
           average = Time.at(worked_hours/worked_days) if worked_days > 0
-
-          footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(41).tc('black','white','bold')
+          
+          footer = ''
+          footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(41).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(42).tc('black','white','bold')
-          puts footer
+          puts footer if worked_days > 0 or worked_hours > 0
       end
     when 'droptable'
       puts "Are you sure you want to drop your timesheet table? [y/N]"
@@ -371,20 +393,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
         DB.execute("drop table timesheet")
       end
     when 'help', /\w+/
-      puts %{Usage: termite [command] [[params]]
-Commands:
-  start     Marks that you started working
-  stop      Marks that you stopped working
-  lunch     Marks that you are out to lunch
-  back      Marks that you are back from lunch
-  sick      Marks that you are sick for the day
-  list      List the last n entries
-  add       Adds a new entry, used to add times for previous dates and times
-  edit      Updates an entry by the given id with given date
-  update    Updates the last entry, setting the date and time to now
-  report    Shows a report of the latest information
-  help      Shows this message
-}
+      puts help_message
   end
   show_status unless ARGV.include?('--no-status')
   DB.close
