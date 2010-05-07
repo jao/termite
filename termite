@@ -322,7 +322,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week_days_header = ["".left(15).tc('black','white')]
           0.upto(6) do |day_of_week|
             day = start_of_week.days(day_of_week)
-            week_days_header << day.strftime("%a").center(7).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'white')
+            week_days_header << day.strftime("%a").center(7).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'green', 'b')
           end
           puts week_days_header.join("|")
           
