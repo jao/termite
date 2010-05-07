@@ -2,29 +2,13 @@
 
 # Command line Timesheet
 # Version: 0.5
-#
 # Author: joão paulo camargo
-# github: http://github.com/jao
 # 
 # This script is released under the MIT License
-# 
-# time tracker using sqlite
-# buit from scratch, command line only
+# copyright 2010 Code 42 (http://code42.com.br)
 # 
 # == Installation
-# put the script in a directory and add the directory to your PATH,
-# or put the files in a directory you already use for common scripts
-# 
-# Run the script for the first time, the database should be created
-# because it will go to the rescue which creates the table the script
-# uses.
-# 
-# == Requirements
-# rubygems
-# sqlite3
-# 
-# == To do
-# - add the option to start and stop working more than once a day
+# read the readme.md file
 # 
 
 # Configuration
