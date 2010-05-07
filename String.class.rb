@@ -5,7 +5,7 @@ class String
     @format ||= format
   end
 
-  def colorize fg, bg=nil, format=nil
+  def tc fg, bg=nil, format=nil
     init
     @fg = fg_color(fg)
     @bg = bg_color(bg) unless bg.nil?
@@ -14,57 +14,56 @@ class String
   end
   
   def success
-    colorize('black', 'green')
+    tc('black', 'green')
   end
   
   def warning
-    colorize('black','yellow')
+    tc('black','yellow')
   end
   
   def error
-    colorize('white', 'red', 'bold')
+    tc('white', 'red', 'b')
   end
   
-  def right size=10
-    s = " #{self} "
-    s = " #{s}" while s.length < size
+  def right n=10
+    s = " #{self.strip} "
+    s = " "+s while s.length < n
     s
   end
   
-  def left size=10
-    s = " #{self} "
-    s = "#{s} " while s.length < size
+  def left n=10
+    s = " #{self.strip} "
+    s += " " while s.length < n
     s
   end
   
-  def center size=60
-    s = " #{self} "
-    s = (s.length % 2 == 0) ? " #{s}" : "#{s} " while s.length < size
+  def center n=60
+    s = " #{self.strip} "
+    s = (s.length % 2 == 0) ? " "+s : s+" " while s.length < n
     s
   end
 
-  def banner size=60, lines=false
-    max = size
+  def banner n=60, sl=false
+    max = n
     s = ""
     self.each_line do |l|
-      l = l.chomp # gsub(/\r|\n/,'')
+      l = l.strip.chomp
       l = "  #{l}  "
       max = l.length if l.length > max
-      l += " " while l.length <= size
+      l += " " while l.length < n
       s += "#{l}\n"
     end
-    lt = " "*size
-    lb = " "*size
-    if max > size
-      s.banner max+4, lines
+    la = lb = " "*n
+    if max > n
+      s.banner max+4, sl
     else
-      lines ? "\n#{lt}\n#{s.chomp}\n#{lb}" : "#{s.chomp}"
+      sl ? "\n#{lb}\n#{s.chomp}\n#{la}" : "#{s.chomp}"
     end
   end
 
   protected
-  def format mode=nil
-    case mode
+  def format fn=nil
+    case fn
       when 'bold','b':      1
       when 'underline','u': 4
       when 'blink','i':     5
@@ -73,8 +72,8 @@ class String
     end
   end
 
-  def fg_color color=nil
-    case color
+  def fg_color cn=nil
+    case cn
       when 'black':  30
       when 'red':    31
       when 'green':  32
@@ -87,8 +86,8 @@ class String
     end
   end
 
-  def bg_color color=nil
-    case color
+  def bg_color cn=nil
+    case cn
       when 'black':  40
       when 'red':    41
       when 'green':  42
