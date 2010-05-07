@@ -26,7 +26,7 @@ Screenshots:
 
 ### Clone the repository
 
-  git://github.com/jao/timesheet.git
+    git://github.com/jao/timesheet.git
  
 ### Add the script's directory to your path
 
@@ -38,7 +38,7 @@ Run the script for the first time, the database should be created automatically 
 
 If you want a very simple command completion for the work script, you can add the following to your .bash_profile.
 
-  source /path/to/timesheet/.work_completion.sh
+    source /path/to/timesheet/.work_completion.sh
   
 ### Change the script at your own risk, no support available.
 
