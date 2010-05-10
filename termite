@@ -295,8 +295,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer = ''
           footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(38).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(39).tc('black','white','bold')
-          puts footer if worked_days > 0 or worked_hours > 0
-          puts ""
+          puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
         when 'weekly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -321,7 +320,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             week_days = ["#{start_of_week.ftime('daymonth')} - #{end_of_week.ftime('daymonth')}".left(15).tc('black','white')]
             0.upto(6) do |day_of_week|
               (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily start_of_week.days(day_of_week)
-              worked_hours += total.to_i - FIX_TIME
+              worked_hours += total.to_i - FIX_TIME if !total.nil?
               worked_days += 1 if !start.nil?
               week_days << ((total.nil?) ? '' : total.ftime).right(7).tc(cpick({:status => 'total', :date => total.to_i}))
             end
@@ -334,8 +333,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer = ''
           footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(35).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(36).tc('black','white','bold')
-          puts footer if worked_days > 0 or worked_hours > 0
-          puts ""
+          puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
         when 'monthly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -358,7 +356,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           day = start_of_month = today.start_of_month
           while day.month == today.month
             (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily(today.day == day.day ? today : day)
-            worked_hours += total.to_i - FIX_TIME
+            worked_hours += total.to_i - FIX_TIME if !total.nil?
             worked_days += 1 if !start.nil?
             month[day.day] = [day.wday, total]
             day = day.tomorrow
@@ -384,8 +382,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer = ''
           footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(41).tc('black','white','bold')
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(42).tc('black','white','bold')
-          puts footer if worked_days > 0 or worked_hours > 0
-          puts ""
+          puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
       end
     when 'droptable'
       puts "Are you sure you want to drop your timesheet table? [y/N]"
