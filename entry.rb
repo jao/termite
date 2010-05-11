@@ -68,7 +68,7 @@ class Entry
       lunch_duration = (!back.nil? and !lunch.nil?) ? back.to_i - lunch.to_i : (!lunch.nil?) ? time.to_i - lunch.to_i : 0
       req_lunch_duration = (lunch_duration >= MINIMUM_LUNCH_DURATION) ? lunch_duration : MINIMUM_LUNCH_DURATION
       lunch_duration = Time.at(lunch_duration + FIX_TIME)
-      total = Time.at(stop.to_i - start.to_i - ((stop.to_i - start.to_i >= 21600) ? req_lunch_duration : 0) + FIX_TIME)
+      total = Time.at(stop.to_i - start.to_i - (((stop.to_i - start.to_i >= 21600) or (!lunch.nil? and !back.nil?)) ? req_lunch_duration : 0) + FIX_TIME)
     end
     return [start, lunch, back, stop, lunch_duration, total]
   end
