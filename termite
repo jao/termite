@@ -153,8 +153,9 @@ begin
     when 'edit'
       id = ARGV[0]
       date = Time.parse(ARGV[1])
-      if Time === date
-        row = Entry.find({:conditions => "timesheet_id=#{id}"})
+      puts "#{id} #{date.inspect}"
+      if Time === date and id =~ /\d+/
+        row = Entry.find({:conditions => "timesheet_id = #{id}"}).first
         if !row.nil?
           puts list_header
           puts list_row(row)
