@@ -51,6 +51,7 @@ help      Shows this message
 $LOAD_PATH << File.dirname(__FILE__)
 require 'util.rb'
 require 'sqlite3'
+require 'active_record'
 require 'entry.rb'
 
 # create or select the database

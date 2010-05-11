@@ -1,4 +1,4 @@
-class Entry
+class Entry < ActiveRecord::Base
   attr_accessor :timesheet_id, :status, :unixtime, :comments
   def initialize args=[]
     return nil if args.empty?
