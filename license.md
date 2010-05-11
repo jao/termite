@@ -1,6 +1,6 @@
 # MIT License
  
-Copyright (c) 2010 [Code 42](http://code42.com.br)
+Copyright © 2010 [João Paulo Camargo](http://jpcamargo.com)
  
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

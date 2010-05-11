@@ -72,7 +72,7 @@ Something like this:
 
 ## License
 
-Termite is released under the MIT license and is copyright (c) 2010 [Code 42](http://code42.com.br)
+Termite is released under the MIT license and is copyright © 2010 [João Paulo Camargo](http://jpcamargo.com)
 
 [Read the license](http://github.com/jao/timesheet/master/LICENSE)
 
