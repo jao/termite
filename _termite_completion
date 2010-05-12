@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+
+# to install, add the following line to your .bash_profile or .bashrc
+# complete -C path/to/_termite_completion -o default termite
+
+# Termite completion will return matching termite commands given typed text. This way
+# you can auto-complete tasks as you are typing them by hitting [tab] or [tab][tab]
+# This also caches termite commands for optimium speed
+
+class TermiteCompletion
+  CACHE_FILE_NAME = ".termite_cache"
+  
+  def initialize(command)
+    @command = command
+  end
+  
+  def matches
+    exit 0 if script_file.nil?
+    matching_features
+  end
+  
+  private
+  
+  def typed
+    @command[/\s(.+?)$/, 1] || ''
+  end
+  
+  def parameters feature
+    case feature
+      when 'report'
+        ['daily', 'weekly', 'monthly'].join("\n")
+      when 'add'
+        ['start', 'stop', 'lunch', 'back', 'sick'].join("\n")
+      when /add \w+ $/
+        
+      when 'edit'
+        /\s\d+/
+      when /edit \d+ $/
+        /(\d{4}-\d{2}-\d{2} )?\d{1,2}:\d{2}$/
+      else ''
+    end
+  end
+  
+  def matching_features
+    all_features.select do |feature|
+      feature[0, typed.length] == typed
+    end
+  end
+  
+  def all_features
+    cache_current? ? features_from_cache : generate_features
+  end
+  
+  def cache_current?
+    File.exist?(cache_file) && File.mtime(cache_file) >= File.mtime(script_file)
+  end
+  
+  def script_file
+    termite = File.join(File.dirname(__FILE__), 'termite')
+    File.file?(termite) ? termite : nil
+  end
+  
+  def cache_file
+    File.join(ENV['HOME'], CACHE_FILE_NAME)
+  end
+  
+  def features_from_cache
+    IO.read(cache_file).split
+  end
+  
+  def generate_features
+    features = `termite help --no-status`.split("\n")[2..-1].collect {|line| line.split(/\s+/)[0]}
+    File.open(cache_file, 'w') { |f| f.write features.delete_if{|f| f == ''}.sort{|a,b| a <=> b}.join("\n") }
+    features
+  end
+end
+puts TermiteCompletion.new(ENV["COMP_LINE"]).matches
+exit 0
