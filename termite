@@ -114,7 +114,7 @@ end
 def show_status n
   row = Entry.last
   if !row.nil?
-    puts "#{row.status_message} since #{row.datetime}".left(n).tc('green', nil, 'b')
+    puts "#{row.status_message} since #{row.datetime} ~ #{Time.now.ftime('datetime')}".left(n).tc('green', nil, 'b')
   else
     puts "Please use 'termite start' to initialize the database.".left(n).tc('yellow', nil, 'b')
   end
