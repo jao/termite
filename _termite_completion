@@ -58,14 +58,6 @@ class TermiteCompletion
           else ''
         end
       when 'add'
-        case typed_param
-          when '', /[a-z]+$/i
-            ['start', 'stop', 'lunch', 'back', 'sick'].select do |param|
-              param[0, typed_param.length] == typed_param and param != typed_param
-            end
-          else ''
-        end
-        
         if ['start', 'stop', 'lunch', 'back', 'sick'].include? typed_param
           case typed_date
             when /^("|')$/
@@ -75,6 +67,14 @@ class TermiteCompletion
               ''
           end
         end
+
+        case typed_param
+          when '', /^[a-z]+$/i
+            ['start', 'stop', 'lunch', 'back', 'sick'].select do |param|
+              param[0, typed_param.length] == typed_param and param != typed_param
+            end
+          else ''
+        end        
       when 'edit'
         if typed_id == '' and typed_date == ''
           puts "insert an entry's id"
@@ -82,20 +82,19 @@ class TermiteCompletion
         elsif typed_id =~ /\d+/ and typed_date == ''
           [typed_id]
         elsif typed_id =~ /\d+/
-          now = Time.now
           case typed_date
             when /^("|')$/
-              [now.strftime("%Y-%m-%d %H:%M") + typed_date]
-            when /^("|')\d+$/
-              [now.year.to_s + '-']
-            when /^("|')\d+\-$/
-              [now.month.to_s + '-']
-            when /^("|')\d+\-\d+\-$/
-              [now.day.to_s + ' ']
-            when /^("|')\d+\-\d+\-\d+ $/
-              [now.hour.to_s + ':']
-            when /^("|')\d+\-\d+\-\d+ \d+\:$/
-              [now.min.to_s + typed_date[0,1]]
+              [Time.now.strftime("%Y-%m-%d %H:%M") + typed_date]
+            # when /^("|')\d+$/
+            #   [now.year.to_s + '-']
+            # when /^("|')\d+\-$/
+            #   [now.month.to_s + '-']
+            # when /^("|')\d+\-\d+\-$/
+            #   [now.day.to_s + ' ']
+            # when /^("|')\d+\-\d+\-\d+ $/
+            #   [now.hour.to_s + ':']
+            # when /^("|')\d+\-\d+\-\d+ \d+\:$/
+            #   [now.min.to_s + typed_date[0,1]]
             else
               puts "insert a date formatted as 'YYYY-mm-dd HH:MM'"
               ''
