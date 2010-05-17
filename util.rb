@@ -5,7 +5,9 @@ require 'Integer.class.rb'
 require 'Time.class.rb'
 require 'rubygems'
 
-trap("INT") {
+STDOUT.sync = true
+
+trap("INT"){
   print "\n\n"
-  exit 0
+  exit
 }

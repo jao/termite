@@ -29,6 +29,7 @@ class Time
   
   def ftime f='time'
     case f
+      when 'datetimesec': self.strftime("%d/%m/%Y %H:%M %S'")
       when 'datetime': self.strftime("%d/%m/%Y %H:%M")
       when 'iso': self.strftime("%Y-%m-%d %H:%M")
       when 'date': self.strftime("%d/%m/%Y")

@@ -112,11 +112,11 @@ def set_adium_status status, msg=''
 end
 
 def show_status n
-  row = Entry.last
-  if !row.nil?
-    puts "#{row.status_message} since #{row.datetime} ~ #{Time.now.ftime('datetime')}".left(n).tc('green', nil, 'b')
+  @row ||= Entry.last
+  if !@row.nil?
+    "#{@row.status_message} since #{@row.datetime} ~ #{Time.now.ftime('datetimesec')}".left(n).tc('green', nil, 'b')
   else
-    puts "Please use 'termite start' to initialize the database.".left(n).tc('yellow', nil, 'b')
+    "Please use 'termite start' to initialize the database.".left(n).tc('yellow', nil, 'b')
   end
 end
 
@@ -393,13 +393,23 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       if confirmation =~ /y/i
         DB.execute("drop table timesheet")
       end
-    when 'help', /\w+/
+    when 'help', /[^\-]\w+/
       puts help_message
   end
-  unless ARGV.include?('--no-status')
-    show_status(status_size)
-  end
+  @row = Entry.last
   DB.close
 rescue Exception => e
   puts "An error ocurred #{e.message}\n  #{e.backtrace.join("\n  ")}".error
+end
+
+unless ARGV.include?('--no-status')
+  if arg == '-f' or ARGV.include?('-f')
+    `clear`
+    while true
+      print "\r#{show_status(status_size)}"
+      sleep(1)
+    end
+  else
+    puts show_status(status_size)
+  end
 end
