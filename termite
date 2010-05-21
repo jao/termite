@@ -153,14 +153,14 @@ begin
     when 'add'
       command = ARGV[0]
       date = Time.parse(ARGV[1])
-      if ['start','stop','lunch','back'].include?(command) and Time === date
+      if ['start','stop','lunch','back'].include?(command) && date.is_a?(Time)
         Entry.create({:date => date.to_i, :status => command})
       end
     when 'edit'
       id = ARGV[0]
       date = Time.parse(ARGV[1])
       puts "#{id} #{date.inspect}"
-      if Time === date and id =~ /\d+/
+      if date.is_a?(Time) and id =~ /\d+/
         row = Entry.find({:conditions => "timesheet_id = #{id}"}).first
         if !row.nil?
           puts list_header
