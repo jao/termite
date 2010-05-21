@@ -18,8 +18,13 @@
 DB_NAME = 'termite.db'
 
 # termite related configuration
-MINIMUM_LUNCH_DURATION = 3600 # 1 hour in seconds
-FIX_TIME = 10800 # FIXME: issue with time calculations vs. timezone
+TIME_CONFIG = {
+  :start => 9,
+  :end => 18,
+  :total => 8,
+  :lunch => {:upto6 => 900, :full => 3600},
+  :fix_time => 10800
+}
 
 # Adium config (set ADIUM to false if you don't want to use this feature)
 ADIUM=true
@@ -72,34 +77,34 @@ def cpick args
     when 'sick'
       'pink'
     when 'start'
-      ('white' if time.hour == 9) ||
-      ('green' if time.hour == 10) ||
-      ('yellow' if time.hour == 11) ||
+      ('white' if time.hour == TIME_CONFIG[:start]) ||
+      ('green' if time.hour == TIME_CONFIG[:start]+1) ||
+      ('yellow' if time.hour == TIME_CONFIG[:start]+2) ||
       'red'
     when 'stop'
-      ('white' if time.hour == 18) ||
-      ('green' if time.hour == 19) ||
-      ('yellow' if time.hour == 20) ||
+      ('white' if time.hour == TIME_CONFIG[:end]) ||
+      ('green' if time.hour == TIME_CONFIG[:end]+1) ||
+      ('yellow' if time.hour == TIME_CONFIG[:end]+2) ||
       'red'
     when 'lunch'
-      ('white' if time.hour == 12) ||
-      ('green' if time.hour == 13) ||
-      ('yellow' if time.hour == 14) ||
-      'red'
-    when 'back'
       ('white' if time.hour == 13) ||
       ('green' if time.hour == 14) ||
       ('yellow' if time.hour == 15) ||
       'red'
+    when 'back'
+      ('white' if time.hour == 14) ||
+      ('green' if time.hour == 15) ||
+      ('yellow' if time.hour == 16) ||
+      'red'
     when 'lunch_duration'
-      ('white' if time.hour < 1) ||
-      ('green' if time.hour == 1 and time.min < 15) ||
-      ('yellow' if time.hour >= 1 and time.min <= 30) ||
+      ('white' if time.hour < 1 && time.min <= 15) ||
+      ('green' if time.hour < 1 && time.min > 15) ||
+      ('yellow' if time.hour == 1 && time.min < 15) ||
       'red'
     when 'total'
-      ('white' if time.hour == 8 and time.min <= 30) ||
-      ('green' if time.hour == 9 or (time.hour == 8 and time.min >= 30)) ||
-      ('yellow' if time.hour == 10 or time.hour <= 7) ||
+      ('white' if time.hour == TIME_CONFIG[:total] and time.min <= 30) ||
+      ('green' if time.hour == TIME_CONFIG[:total]+1 || (time.hour == TIME_CONFIG[:total] and time.min >= 30)) ||
+      ('yellow' if time.hour == TIME_CONFIG[:total]+2 || time.hour < TIME_CONFIG[:total]) ||
       'red'
     else
       'white'
@@ -127,7 +132,7 @@ def list_header
     'date'.left(12),
     'time'.left(7),
     'comments'.left(75)
-  ].join('|').tc(nil, nil, 'b').tc(nil, nil, 'invert')
+  ].join('|').tc('black', 'white', 'b')
 end
 
 def list_row row
@@ -136,7 +141,7 @@ def list_row row
     row.status.left(8),
     row.date.left(12),
     row.time.right(6).tc(cpick({:status => row.status, :date => row.to_i})),
-    row.comments.slice(0,73).left(75)
+    row.comments.left(75)
   ].join('|')
 end
 
@@ -277,7 +282,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           0.upto(7) do |count|
             (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily today
             
-            worked_hours += total.to_i - FIX_TIME if !total.nil?
+            worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
             worked_days += 1 if !start.nil?
             
             puts [
@@ -291,12 +296,14 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             ].join('|')
             today = today.yesterday
           end
-          total = Time.at(worked_hours + FIX_TIME)
-          average = Time.at((worked_hours/worked_days) + FIX_TIME) if worked_days > 0
+          total = Time.at(worked_hours + TIME_CONFIG[:fix_time])
+          average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer = (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(38).tc('black','white','bold')
-          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(39).tc('black','white','bold')
+          footer += "worked: #{worked_days} days".left(16).tc('black','white','bold')
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day" : '').left(20).tc('black','white','bold')
+          footer += (worked_days > 0 ? "EWT: #{worked_days * 8} hours" : '').right(20).tc('black','white','bold')          
+          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(21).tc('black','white','bold')
           puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
         when 'weekly'
           today = now
@@ -322,20 +329,22 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             week_days = ["#{start_of_week.ftime('daymonth')} - #{end_of_week.ftime('daymonth')}".left(15).tc('black','white')]
             0.upto(6) do |day_of_week|
               (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily start_of_week.days(day_of_week)
-              worked_hours += total.to_i - FIX_TIME if !total.nil?
+              worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
               worked_days += 1 if !start.nil?
               week_days << ((total.nil?) ? '' : total.ftime).right(7).tc(cpick({:status => 'total', :date => total.to_i}))
             end
             puts week_days.join('|')
           end
           
-          total = Time.at(worked_hours + FIX_TIME)
-          average = Time.at((worked_hours/worked_days) + FIX_TIME) if worked_days > 0
+          total = Time.at(worked_hours + TIME_CONFIG[:fix_time])
+          average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(35).tc('black','white','bold')
-          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(36).tc('black','white','bold')
-          puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
+          footer = "worked: #{worked_days}d".left(14).tc('black','white','bold')
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day" : '').left(18).tc('black','white','bold')
+          footer += (worked_days > 0 ? "EWT: #{worked_days * 8} hours" : '').right(18).tc('black','white','bold')          
+          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(20).tc('black','white','bold')
+          puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
         when 'monthly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -358,7 +367,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           day = start_of_month = today.start_of_month
           while day.month == today.month
             (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily(today.day == day.day ? today : day)
-            worked_hours += total.to_i - FIX_TIME if !total.nil?
+            worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
             worked_days += 1 if !start.nil?
             month[day.day] = [day.wday, total]
             day = day.tomorrow
@@ -378,13 +387,15 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             puts week.join('|')
           end
           
-          total = Time.at(worked_hours + FIX_TIME)
-          average = Time.at((worked_hours/worked_days) + FIX_TIME) if worked_days > 0
+          total = Time.at(worked_hours + TIME_CONFIG[:fix_time])
+          average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer += (worked_days > 0 ? "Average: #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day (#{worked_days} days)" : '').left(41).tc('black','white','bold')
-          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(42).tc('black','white','bold')
-          puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
+          footer = "worked: #{worked_days} days".left(16).tc('black','white','bold')
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day" : '').left(20).tc('black','white','bold')
+          footer += (worked_days > 0 ? "EWT: #{worked_days * 8} hours" : '').right(22).tc('black','white','bold')          
+          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(25).tc('black','white','bold')
+          puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
       end
     when 'droptable'
       puts "Are you sure you want to drop your timesheet table? [y/N]"
