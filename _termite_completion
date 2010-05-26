@@ -111,7 +111,7 @@ class TermiteCompletion
   end
   
   def cache_current?
-    File.exist?(cache_file) && File.mtime(cache_file) >= File.mtime(script_file)
+    File.exist?(cache_file) && File.mtime(cache_file) >= File.mtime(File.join(File.dirname(__FILE__), script_file))
   end
   
   def script_file
