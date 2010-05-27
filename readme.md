@@ -75,7 +75,7 @@ Something like this:
 
 Termite is released under the MIT license and is copyright © 2010 [João Paulo Camargo](http://jpcamargo.com)
 
-[Read the license](http://github.com/jao/timesheet/master/license.md)
+[Read the license](http://github.com/jao/termite/master/license.md)
 
 ### Change the script at your own risk.
 
