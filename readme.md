@@ -49,7 +49,7 @@ open the termite script file, and change the following constants as you see fit.
 
 If you want a very simple command completion for the work script, you can add the following to your .bash_profile.
 
-    source /path/to/termite/termite_completion.sh
+    complete -C /path/to/termite/_termite_completion -o default termite
 
 ## For multiple computers
 
