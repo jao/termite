@@ -1,6 +1,6 @@
 # Termite
 
-* Version: 0.6
+* Version: 0.7
 * Author: joão paulo camargo
 
 Termite is an open source time tracker ruby script/tool that uses sqlite. It is very simple, and it is meant for personal time management.
@@ -47,8 +47,9 @@ open the termite script file, and change the following constants as you see fit.
 
 ### Command completion
 
-If you want a very simple command completion for the work script, you can add the following to your .bash_profile.
+If you want a very simple command completion for the termite script, you can add the following to your .bash_profile.
 
+    # termite completion
     complete -C /path/to/termite/_termite_completion -o default termite
 
 ## For multiple computers
