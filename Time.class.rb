@@ -1,6 +1,6 @@
 class Time
   def tomorrow
-    self.days
+    self.days(1)
   end
   
   def days n=1
@@ -29,10 +29,10 @@ class Time
   
   def ftime f='time'
     case f
-      when 'datetimesec': self.strftime("%d/%m/%Y %H:%M %S'")
-      when 'datetime': self.strftime("%d/%m/%Y %H:%M")
-      when 'iso': self.strftime("%Y-%m-%d %H:%M")
       when 'date': self.strftime("%d/%m/%Y")
+      when 'datetime': self.strftime("%d/%m/%Y %H:%M")
+      when 'datetimesec': self.strftime("%d/%m/%Y %H:%M %S'")
+      when 'iso': self.strftime("%Y-%m-%d %H:%M")
       when 'time': self.strftime("%H:%M")
       when 'wday': self.strftime("%a")
       when 'wdaydate': self.strftime("%a %d/%m")

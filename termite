@@ -346,7 +346,9 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(20).tc('black','white','bold')
           puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
         when 'monthly'
-          today = now
+          this_month = ARGV.shift || now.month
+          this_year = ARGV.shift || now.year
+          today = (this_month != now.month || this_year != now.year) ? Time.local(this_year, this_month, 1) : now
           start_of_week = today.days(-today.wday)
           
           status_size = 83
@@ -366,7 +368,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           month = []          
           day = start_of_month = today.start_of_month
           while day.month == today.month
-            (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily(today.day == day.day ? today : day)
+            (start, lunch, back, stop, lunch_duration, total) = Entry.report_daily today.day == day.day ? today : day
             worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
             worked_days += 1 if !start.nil?
             month[day.day] = [day.wday, total]
