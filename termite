@@ -261,7 +261,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       case period
         when 'daily'
           # daily report
-          status_size = 89
+          status_size = 88
           puts "Daily report".center(status_size).tc('black', 'yellow', 'b')
           current = now.day.to_i
           puts [
@@ -270,8 +270,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             'lunch'.right(10),
             'back'.right(10),
             'stopped'.right(10),
-            '@lunch'.right(10),
-            '- lunch'.right(10),
+            'lunch'.right(10),
+            '-lunch'.right(10),
             'worked'.right(10)
           ].join('|').tc('black','white','bold')
           
@@ -302,10 +302,10 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer += "worked: #{worked_days} days".left(20).tc('black','white','bold')
-          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day" : '').left(20).tc('black','white','bold')
-          footer += (worked_days > 0 ? "EWT: #{worked_days * 8} hours" : '').right(20).tc('black','white','bold')          
-          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(21).tc('black','white','bold')
+          footer += "worked: #{worked_days} days".left(21).tc('black','white','bold')
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{average.min} hours/day" : '').left(21).tc('black','white','bold')
+          footer += (worked_days > 0 ? "EWT: #{worked_days * 8} hours" : '').right(21).tc('black','white','bold')          
+          footer += (worked_hours > 0 ? "Total: #{(total.day-1) * 24 + total.hour}:#{total.min} hours" : '').right(25).tc('black','white','bold')
           puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
         when 'weekly'
           today = now
