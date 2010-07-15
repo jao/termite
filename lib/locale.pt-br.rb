@@ -7,49 +7,17 @@ TIME_CONFIG = {
 }
 
 HOLIDAYS = [
-  {
-    :date =>'01/01',
-    :label => 'Ano novo'
-  },
-  {
-    :date =>'21/04',
-    :label => 'Tiradentes'
-  },
-  {
-    :date =>'01/05',
-    :label => 'Dia do Trabalho'
-  },
-  {
-    :date =>'09/07',
-    :label => 'Nove de Julho'
-  },
-  {
-    :date => '07/09',
-    :label => 'Independencia do Brasil'
-  },
-  {
-    :date =>'12/10',
-    :label => 'Nossa Sra. Aparecida - Padroeira do Brasil'
-  },
-  {
-    :date =>'02/11',
-    :label => 'Finados'
-  },
-  {
-    :date =>'15/11',
-    :label => 'Proclamacao da Republica'
-  },
-  {
-    :date =>'25/12',
-    :label => 'Natal'
-  },
-  {
-    
-  }
+  {:date => '01/01', :label => 'Ano novo'},
+  {:date => '21/04', :label => 'Tiradentes'},
+  {:date => '01/05', :label => 'Dia do Trabalho'},
+  {:date => '07/09', :label => 'Independencia do Brasil'},
+  {:date => '12/10', :label => 'Nossa Senhora Aparecida'},
+  {:date => '02/11', :label => 'Finados'},
+  {:date => '15/11', :label => 'Proclamacao da Republica'},
+  {:date => '25/12', :label => 'Natal'}
 ]
 
 # add the other variable holidays
-# eastern
 x = 24; y = 5; year = Time.now.year
 a = year % 19; b = year % 4; c = year % 7
 d = (19*a+x) % 30
@@ -61,13 +29,16 @@ else
 end
 date = "19/04" if date == "26/04"
 date = "18/04" if date == "25/04" && a > 10 && d == 28
+eastern_date = Time.parse("#{date}/#{year}")
 
 other_holidays = [{:date => date, :label => "Pascoa"}]
-
-# carnival and corpus christi
-eastern_date = Time.parse("#{date}/#{year}")
 other_holidays << {:date => (eastern_date.days(-48)).day_month, :label => "Carnaval"}
 other_holidays << {:date => (eastern_date.days(-47)).day_month, :label => "Carnaval"}
 other_holidays << {:date => (eastern_date.days(60)).day_month, :label => "Corpus Christi"}
-
 HOLIDAYS.concat(other_holidays)
+
+# sao paulo specific holidays
+sp_br = [
+  {:date => '09/07', :label => 'Nove de Julho'}
+]
+HOLIDAYS.concat(sp_br)
