@@ -17,6 +17,12 @@
 # database file name
 DB_NAME = 'termite.db'
 
+$LOAD_PATH << File.dirname(__FILE__)
+require 'util.rb'
+require 'sqlite3'
+require 'active_record'
+require 'entry.rb'
+
 # termite related configuration
 require 'lib/locale.pt-br.rb'
 
@@ -46,12 +52,6 @@ update    Updates the last entry, setting the date and time to now
 report    Shows a report of the latest information
 help      Shows this message
 }
-
-$LOAD_PATH << File.dirname(__FILE__)
-require 'util.rb'
-require 'sqlite3'
-require 'active_record'
-require 'entry.rb'
 
 # create or select the database
 DB = SQLite3::Database.new(File.dirname(__FILE__)+"/"+DB_NAME)
