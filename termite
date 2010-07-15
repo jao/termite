@@ -18,13 +18,7 @@
 DB_NAME = 'termite.db'
 
 # termite related configuration
-TIME_CONFIG = {
-  :start => 9,
-  :end => 18,
-  :total => 8,
-  :lunch => {:upto6 => 900, :full => 3600},
-  :fix_time => 10800
-}
+require 'lib/locale.pt-br.rb'
 
 # Adium config (set ADIUM to false if you don't want to use this feature)
 ADIUM=true
@@ -70,9 +64,11 @@ rescue Exception => e
   puts help_message
 end
 
-def cpick args
+def cpick *args
+  args = args.extract_options!
   time = Time.at(args[:date])
   return 'cyan' if [0,6].include? time.wday
+  return 'red' if HOLIDAYS.key?(time.ftime('date'))
   case args[:status]
     when 'sick'
       'pink'
@@ -284,17 +280,17 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = Entry.report_daily today
             
             worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
-            worked_days += 1 if !start.nil? && ![0,6].include?(today.wday)
+            worked_days += 1 if !start.nil? && ![0,6].include?(today.wday) && !HOLIDAYS.key?(today.ftime('date'))
             
             puts [
-              today.ftime('wdaydate').left(11).tc(([0,6].include? today.wday) ? 'cyan' : 'white'),
-              ((start.nil?) ? '' : start.time).right(10).tc(cpick({:status => 'start', :date => start.to_i})),
-              ((lunch.nil?) ? '' : lunch.time).right(10).tc(cpick({:status => 'lunch', :date => lunch.to_i})),
-              ((back.nil?) ? '' : back.time).right(10).tc(cpick({:status => 'back', :date => back.to_i})),
-              ((stop.nil? or stop==now) ? '' : stop.time).right(10).tc(cpick({:status => 'stop', :date => stop.to_i})),
-              ((lunch_duration.to_i > 0) ? lunch_duration.ftime : '').right(10).tc(cpick({:status => 'lunch_duration', :date => lunch_duration.to_i})),
-              ((req_lunch_duration.to_i > 0) ? req_lunch_duration.ftime : '').right(10).tc(cpick({:status => 'lunch_duration', :date => req_lunch_duration.to_i})),
-              ((total.nil?) ? '' : total.ftime).right(10).tc(cpick({:status => 'total', :date => total.to_i}))
+              today.ftime('wdaydate').left(11).tc(cpick(:date => today)),
+              ((start.nil?) ? '' : start.time).right(10).tc(cpick(:status => 'start', :date => start.to_i)),
+              ((lunch.nil?) ? '' : lunch.time).right(10).tc(cpick(:status => 'lunch', :date => lunch.to_i)),
+              ((back.nil?) ? '' : back.time).right(10).tc(cpick(:status => 'back', :date => back.to_i)),
+              ((stop.nil? or stop==now) ? '' : stop.time).right(10).tc(cpick(:status => 'stop', :date => stop.to_i)),
+              ((lunch_duration.to_i > 0) ? lunch_duration.ftime : '').right(10).tc(cpick(:status => 'lunch_duration', :date => lunch_duration.to_i)),
+              ((req_lunch_duration.to_i > 0) ? req_lunch_duration.ftime : '').right(10).tc(cpick(:status => 'lunch_duration', :date => req_lunch_duration.to_i)),
+              ((total.nil?) ? '' : total.ftime).right(10).tc(cpick(:status => 'total', :date => total.to_i))
             ].join('|')
             today = today.yesterday
           end
@@ -317,7 +313,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week_days_header = ["".left(15).tc('black','white')]
           0.upto(6) do |day_of_week|
             day = start_of_week.days(day_of_week)
-            week_days_header << day.ftime('wday').center(7).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'green', 'b')
+            week_days_header << day.ftime('wday').center(7).tc('black', cpick(:date => day), 'b')
           end
           puts week_days_header.join("|")
           
@@ -332,8 +328,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             0.upto(6) do |day_of_week|
               (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = Entry.report_daily start_of_week.days(day_of_week)
               worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
-              worked_days += 1 if !start.nil? && ![0,6].include?(start_of_week.days(day_of_week).wday)
-              week_days << ((total.nil?) ? '' : total.ftime).right(7).tc(cpick({:status => 'total', :date => total.to_i}))
+              worked_days += 1 if !start.nil? && ![0,6].include?(start_of_week.days(day_of_week).wday) && !HOLIDAYS.key?(start_of_week.days(day_of_week).ftime('date'))
+              week_days << ((total.nil?) ? '' : total.ftime).right(7).tc(cpick(:status => 'total', :date => total.to_i))
             end
             puts week_days.join('|')
           end
@@ -359,7 +355,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week_days_header = []
           0.upto(6) do |wday|
             day = start_of_week.days(wday)
-            week_days_header << day.ftime('wday').center(11).tc('black', [0,6].include?(day.wday) ? 'cyan' : 'green', 'b')
+            week_days_header << day.ftime('wday').center(11).tc('black', cpick(:date => day), 'b')
           end
           puts week_days_header.join('|')
           
@@ -372,7 +368,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           while day.month == today.month
             (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = Entry.report_daily today.day == day.day ? today : day
             worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
-            worked_days += 1 if !start.nil? && ![0,6].include?(day.wday)
+            worked_days += 1 if !start.nil? && ![0,6].include?(day.wday) && !HOLIDAYS.key?(day.ftime('date'))
             month[day.day] = [day.wday, total]
             day = day.tomorrow
           end
@@ -380,7 +376,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week = []
           for i in (1...month.size)
             week << "".left(11) while month[i][0] > week.size
-            week << "#{i.to_s.right(4).tc('black', 'white')}#{(month[i][1].nil? ? '' : month[i][1].ftime).right(7).tc(cpick({:status => 'total', :date => month[i][1].to_i}))}"
+            week << "#{i.to_s.right(4).tc('black', cpick(:date => Time.local(this_year, this_month, i)))}#{(month[i][1].nil? ? '' : month[i][1].ftime).right(7).tc(cpick(:status => 'total', :date => month[i][1].to_i))}"
             if month[i][0] == 6
               puts week.join('|')
               week = []
