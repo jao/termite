@@ -23,8 +23,10 @@ require 'sqlite3'
 require 'active_record'
 require 'entry.rb'
 
-# termite related configuration
-require 'lib/locale.pt-br.rb'
+# termite locale related configuration
+REGION = 'SP'
+LOCALE = 'pt-br'
+require "lib/locale.#{LOCALE}.rb"
 
 # Adium config (set ADIUM to false if you don't want to use this feature)
 ADIUM=true
