@@ -49,7 +49,7 @@ There will be **no** language translations for termite, the script messages and 
 
 open the termite script file, and change the constants below as you see fit.
 
-    ADIUM=true
+    ADIUM = true
     ADIUM_STATUS = {
       :available => 'Working',
       :lunch => 'Out to lunch',
