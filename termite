@@ -29,12 +29,14 @@ REGION = 'SP'
 require "lib/locale-#{COUNTRY}.rb"
 
 ## Adium config (set ADIUM to false if you don't want to use this feature)
-ADIUM=true
-ADIUM_AVAILABLE='http://jpcamargo.com'
-ADIUM_LUNCH='Out to lunch'
-ADIUM_AWAY='Be right back'
-ADIUM_SICK='I am sick'
-ADIUM_STOP='Going home'
+ADIUM = true
+ADIUM_STATUS = {
+  :available => 'http://jpcamargo.com',
+  :lunch => 'Out to lunch',
+  :away => 'Be right back',
+  :sick => 'I am sick',
+  :stop => 'Going home'
+}
 
 # 
 # Script starts here (change it if you want to)
@@ -203,7 +205,7 @@ begin
       if !row.nil? and row.status == 'stop'
         today = Time.local(now.year,now.month,now.day)
         Entry.create({:date => today.to_i, :status => arg})
-        set_adium_status('away', ADIUM_SICK)
+        set_adium_status('away', ADIUM_STATUS[:sick])
       else
         puts %{
 Error, you forgot to log you were leaving work, cannot add a sick day.
@@ -214,7 +216,7 @@ Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
       row = Entry.last
       if !row.nil? and row.status == 'stop'
         Entry.create({:date => now.to_i, :status => arg})
-        set_adium_status('available', ADIUM_AVAILABLE)
+        set_adium_status('available', ADIUM_STATUS[:available])
       else
         puts %{
 Error, you forgot to log you were leaving work, cannot start.
@@ -225,7 +227,7 @@ Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
       row = Entry.last
       if !row.nil? and row.status == 'start'
         Entry.create({:date => now.to_i, :status => arg})
-        set_adium_status('away', ADIUM_LUNCH)
+        set_adium_status('away', ADIUM_STATUS[:lunch])
       else
         puts %{
 Error, you forgot to log you were working, cannot go to lunch.
@@ -236,7 +238,7 @@ Please use "termite add start [YYYY-mm-dd HH:MM], and try again."
       row = Entry.last
       if !row.nil? and row.status == 'lunch'
         Entry.create({:date => now.to_i, :status => arg})
-        set_adium_status('available', ADIUM_AVAILABLE)
+        set_adium_status('available', ADIUM_STATUS[:available])
       else
         puts %{
 Error, you forgot to log you having lunch, cannot come back.
@@ -247,7 +249,7 @@ Please use "termite add lunch [YYYY-mm-dd HH:MM], and try again."
       row = Entry.last
       if !row.nil? and ['start','back'].include?(row.status)
         Entry.create({:date => now.to_i, :status => arg})
-        set_adium_status('away', ADIUM_STOP)
+        set_adium_status('away', ADIUM_STATUS[:stop])
       else
         puts %{
 Error, you forgot to log you were working or back from lunch, cannot stop.
