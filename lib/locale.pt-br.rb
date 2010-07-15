@@ -1,23 +1,73 @@
 TIME_CONFIG = {
   :start => 9,
   :end => 18,
-  :total => 8,
+  :workday => 8,
   :lunch => {:upto6 => 900, :full => 3600},
   :fix_time => 10800
 }
 
-HOLIDAYS = {
-  '01/01/2010' => 'Confraternização Universal',
-  '15/02/2010' => 'Carnaval',
-  '16/02/2010' => 'Carnaval',
-  '02/04/2010' => 'Paixão de Cristo',
-  '21/04/2010' => 'Tiradentes',
-  '01/05/2010' => 'Dia do Trabalho',
-  '03/06/2010' => 'Corpus Christi',
-  '09/07/2010' => 'Nove de Julho',
-  '07/09/2010' => 'Independência do Brasil',
-  '12/10/2010' => 'Nossa Sra. Aparecida - Padroeira do Brasil',
-  '02/11/2010' => 'Finados',
-  '15/11/2010' => 'Proclamação da República',
-  '25/12/2010' => 'Natal'
-}
+HOLIDAYS = [
+  {
+    :date =>'01/01',
+    :label => 'Ano novo'
+  },
+  {
+    :date =>'21/04',
+    :label => 'Tiradentes'
+  },
+  {
+    :date =>'01/05',
+    :label => 'Dia do Trabalho'
+  },
+  {
+    :date =>'09/07',
+    :label => 'Nove de Julho'
+  },
+  {
+    :date => '07/09',
+    :label => 'Independencia do Brasil'
+  },
+  {
+    :date =>'12/10',
+    :label => 'Nossa Sra. Aparecida - Padroeira do Brasil'
+  },
+  {
+    :date =>'02/11',
+    :label => 'Finados'
+  },
+  {
+    :date =>'15/11',
+    :label => 'Proclamacao da Republica'
+  },
+  {
+    :date =>'25/12',
+    :label => 'Natal'
+  },
+  {
+    
+  }
+]
+
+# add the other variable holidays
+# eastern
+x = 24; y = 5; year = Time.now.year
+a = year % 19; b = year % 4; c = year % 7
+d = (19*a+x) % 30
+e = (2*b+4*c+6*d+y) % 7
+if (d+e) > 9
+  date = "#{"%02d" % (d+e-9)}/04"
+else
+  date = "#{"%02d" % (d+e+22)}/03"
+end
+date = "19/04" if date == "26/04"
+date = "18/04" if date == "25/04" && a > 10 && d == 28
+
+other_holidays = [{:date => date, :label => "Pascoa"}]
+
+# carnival and corpus christi
+eastern_date = Time.parse("#{date}/#{year}")
+other_holidays << {:date => (eastern_date.days(-48)).day_month, :label => "Carnaval"}
+other_holidays << {:date => (eastern_date.days(-47)).day_month, :label => "Carnaval"}
+other_holidays << {:date => (eastern_date.days(60)).day_month, :label => "Corpus Christi"}
+
+HOLIDAYS.concat(other_holidays)

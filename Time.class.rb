@@ -1,10 +1,10 @@
 class Time
-  def tomorrow
-    self.days(1)
-  end
-  
   def days n=1
     self + 86400 * n
+  end
+  
+  def tomorrow
+    self.days(1)
   end
   
   def yesterday
@@ -27,6 +27,42 @@ class Time
     Time.local(self.year, self.month+1) - 1
   end
   
+  def date
+    self.strftime("%d/%m/%Y")
+  end
+  
+  def datetime
+    self.strftime("%d/%m/%Y %H:%M")
+  end
+  
+  def datetimesec
+    self.strftime("%d/%m/%Y %H:%M %S'")
+  end
+  
+  def time
+    self.strftime("%H:%M")
+  end
+  
+  def iso
+    self.strftime("%Y-%m-%d %H:%M")
+  end
+  
+  def weekday
+    self.strftime("%a")
+  end
+  
+  def weekday_date
+    self.strftime("%a %d/%m")
+  end
+  
+  def day_month
+    self.strftime("%d/%m")
+  end
+  
+  def month_year
+    self.strftime("%B %Y")
+  end
+  
   def ftime f='time'
     case f
       when 'date': self.strftime("%d/%m/%Y")
@@ -39,5 +75,12 @@ class Time
       when 'daymonth': self.strftime("%d/%m")
       when 'monthyear': self.strftime("%B %Y")
     end  
+  end
+  
+  def is_holiday?
+    HOLIDAYS.each do |holiday|
+      return true if holiday[:date] == self.day_month && self.year > 1970
+    end
+    return false
   end
 end
