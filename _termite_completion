@@ -24,21 +24,20 @@ class TermiteCompletion
   end
   
   private
-  
   def typed
-    @command[/^termite\s+([a-z]+)\s?/i, 1] || ''
+    @command[/^termite\s+([a-z]+)\s*/i, 1] || ''
   end
   
   def typed_param
-    @command[/^termite\s+[a-z]+\s+([a-z]+)\s?/i, 1] || ''
+    @command[/^termite\s+[a-z]+\s+([a-z]+)\s*/i, 1] || ''
   end
 
   def typed_id
-    @command[/edit (\d+)\s?/, 1] || ''
+    @command[/^termite\s+(?:edit|delete)\s+(\d+)\s*/i, 1] || ''
   end
   
   def typed_date
-    @command[/ (\"[0-9\-\:\s]*|\'[0-9\-\:\s]*|\"[0-9\-\:\s]+\"|\'[0-9\-\:\s]+\')\s?$/, 1] || ''
+    @command[/ (\"[0-9\-\:\s]*|\'[0-9\-\:\s]*|\"[0-9\-\:\s]+\"|\'[0-9\-\:\s]+\')\s*$/i, 1] || ''
   end
   
   def matching_features
@@ -53,7 +52,7 @@ class TermiteCompletion
         case typed_param
           when '', /[a-z]+$/i
             ['daily', 'weekly', 'monthly'].select do |param|
-              param[0, typed_param.length] == typed_param and param != typed_param
+              param[0, typed_param.length] == typed_param && param != typed_param
             end
           else ''
         end
@@ -63,24 +62,25 @@ class TermiteCompletion
             when /^("|')$/
               [Time.now.strftime("%Y-%m-%d %H:%M") + typed_date]
             else
-              puts "insert a date formatted as 'YYYY-mm-dd HH:MM'"
-              ''
+              puts ''
+              "insert a date formatted as 'YYYY-mm-dd HH:MM'"
           end
         end
 
         case typed_param
           when '', /^[a-z]+$/i
             ['start', 'stop', 'lunch', 'back', 'sick'].select do |param|
-              param[0, typed_param.length] == typed_param and param != typed_param
+              param[0, typed_param.length] == typed_param && param != typed_param
             end
           else ''
         end        
       when 'edit'
-        if typed_id == '' and typed_date == ''
-          puts "insert an entry's id"
-          ''
-        elsif typed_id =~ /\d+/ and typed_date == ''
-          [typed_id]
+        if typed_id == '' && typed_date == ''
+          puts ''
+          "insert an entry's id and a date"
+        elsif typed_id =~ /\d+/ && typed_date == ''
+          puts '' 
+          "insert a date formatted as 'YYYY-mm-dd HH:MM'"
         elsif typed_id =~ /\d+/
           case typed_date
             when /^("|')$/
@@ -96,16 +96,19 @@ class TermiteCompletion
             # when /^("|')\d+\-\d+\-\d+ \d+\:$/
             #   [now.min.to_s + typed_date[0,1]]
             else
-              puts "insert a date formatted as 'YYYY-mm-dd HH:MM'"
               ''
+              # "insert a date formatted as 'YYYY-mm-dd HH:MM'"
           end
         else
           ''
         end
       when 'delete'
         if typed_id == ''
-          puts "insert an entry's id"
+          puts ''
+          "insert an entry's id"
+        else
           ''
+        end
       else matching_features
     end
   end
