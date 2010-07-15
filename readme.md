@@ -39,9 +39,9 @@ Add the script's directory to your path for easier use of this tool.
 I've added a localization file for Brazil, with work related time information based on the brazilian laws of labor, and brazilian holidays information (with state/region specific holidays as well).
 
     ## termite locale related configuration
+    COUNTRY = 'BR'
     REGION = 'SP'
-    LOCALE = 'br'
-    require "lib/locale.#{LOCALE}.rb"
+    require "lib/locale-#{COUNTRY}.rb"
 
 If you are in Brazil, change de REGION value to the brazilian state code to load the specific holidays for your state.
 There will be *no* language translations for termite, the script messages and commands *will remain* in english.
