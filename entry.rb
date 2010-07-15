@@ -49,6 +49,10 @@ class Entry < ActiveRecord::Base
     DB.execute("update timesheet set #{fields_to_update(args[:fields])} #{conditions(args[:conditions])}")
   end
   
+  def self.remove args={}
+    DB.execute("delete from timesheet #{conditions(args[:conditions])}")    
+  end
+  
   def self.conditions(args); return build_sql(args, 'where', ' and '); end
   def self.order(args); return build_sql(args, 'order by'); end
   def self.limit(args); return build_sql(args, 'limit');end

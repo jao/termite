@@ -102,6 +102,10 @@ class TermiteCompletion
         else
           ''
         end
+      when 'delete'
+        if typed_id == ''
+          puts "insert an entry's id"
+          ''
       else matching_features
     end
   end
