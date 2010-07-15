@@ -144,4 +144,4 @@ REGIONAL_HOLIDAYS = {
     {:date => '05/10', :label => 'Criacao do estado'}
   ],
 }
-HOLIDAYS.concat(REGIONAL_HOLIDAYS[REGION.to_sym])
+HOLIDAYS.concat(REGIONAL_HOLIDAYS[REGION.to_sym]) if defined?(REGION) && !REGION.blank?

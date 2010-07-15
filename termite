@@ -2,7 +2,7 @@
 
 # Termite
 # command line time tracker
-# Version: 0.6
+# Version: 0.7
 # Author: joão paulo camargo
 # 
 # This script is released under the MIT License
@@ -14,21 +14,21 @@
 
 # Configuration
 
-# database file name
-DB_NAME = 'termite.db'
-
 $LOAD_PATH << File.dirname(__FILE__)
 require 'util.rb'
 require 'sqlite3'
 require 'active_record'
 require 'entry.rb'
 
-# termite locale related configuration
-REGION = 'SP'
-LOCALE = 'pt-br'
-require "lib/locale.#{LOCALE}.rb"
+## database file name
+DB_NAME = 'termite.db'
 
-# Adium config (set ADIUM to false if you don't want to use this feature)
+## termite locale related configuration
+COUNTRY = 'BR'
+REGION = 'SP'
+require "lib/locale-#{COUNTRY}.rb"
+
+## Adium config (set ADIUM to false if you don't want to use this feature)
 ADIUM=true
 ADIUM_AVAILABLE='http://jpcamargo.com'
 ADIUM_LUNCH='Out to lunch'

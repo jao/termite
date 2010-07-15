@@ -34,7 +34,19 @@ Screenshots:
 Run the script for the first time, the database should be created automatically in the same directory of the script. (Make sure the script has permission to write inside the directory, and the script itself is executable)
 Add the script's directory to your path for easier use of this tool.
 
-### For Adium support
+### Localization
+
+I've added a localization file for Brazil, with work related time information based on the brazilian laws of labor, and brazilian holidays information (with state/region specific holidays as well).
+
+    ## termite locale related configuration
+    REGION = 'SP'
+    LOCALE = 'br'
+    require "lib/locale.#{LOCALE}.rb"
+
+If you are in Brazil, change de REGION value to the brazilian state code to load the specific holidays for your state.
+There will be *no* language translations for termite, the script messages and commands *will remain* in english.
+
+### About Adium support
 
 open the termite script file, and change the following constants as you see fit.
 
@@ -47,14 +59,14 @@ open the termite script file, and change the following constants as you see fit.
 
 ### Command completion
 
-If you want a very simple command completion for the termite script, you can add the following to your .bash_profile.
+If you want a very simple command completion for the termite script, you can add the following to your _.bash configuration file_:
 
     # termite completion
     complete -C /path/to/termite/_termite_completion -o default termite
 
 ## For multiple computers
 
-If you plan to use this in more than one computer, I would recommend that you use dropbox. Move the database there, and create a symbolic link inside this script's directory.
+If you plan to use this in more than one computer, for now, I would recommend that you use dropbox. Move the database there, and create a symbolic link inside this script's directory.
 Something like this:
 
     mv termite.db ~/Dropbox/termite.db
@@ -66,10 +78,13 @@ Something like this:
 
 * add a config file option (at the user's home directory)
 * add database migration-like updates
+* add termite source auto-updates (probably using git)
 * add the option to start and stop working more than once a day, or at least break intervals other than lunch
 * add support to projects, and reports based on projects
 * add support to tags, and reports based on tags
-* add an export feature to convert the reports to pdf, csv, etc.
+* add an online sync feature to keep databases updated between computers
+* add an export feature to convert the reports to pdf, csv, etc. (maybe now even to google docs using googlecl)
+* add other countries locale information
 
 ## License
 
