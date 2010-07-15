@@ -68,7 +68,7 @@ def cpick *args
   args = args.extract_options!
   time = Time.at(args[:date])
   return 'cyan' if [0,6].include? time.wday
-  return 'white', 'red' if time.is_holiday? && args[:bg]
+  # return 'white', 'red' if time.is_holiday? && args[:bg]
   return 'red' if time.is_holiday?
   case args[:status]
     when 'sick'
@@ -377,7 +377,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week = []
           for i in (1...month.size)
             week << "".left(11) while month[i][0] > week.size
-            week << "#{i.to_s.right(4).tc('black', cpick(:date => Time.local(this_year, this_month, i)))}#{(month[i][1].nil? ? '' : month[i][1].time).right(7).tc(cpick(:status => 'total', :date => month[i][1].to_i))}"
+            week << "#{("%02d" % i).to_s.right(4).tc(Time.local(this_year, this_month, i).is_holiday? ? 'white' : 'black', cpick(:date => Time.local(this_year, this_month, i)))}#{(month[i][1].nil? ? '' : month[i][1].time).right(7).tc(cpick(:status => 'total', :date => month[i][1].to_i))}"
             if month[i][0] == 6
               puts week.join('|')
               week = []
