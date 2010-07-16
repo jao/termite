@@ -70,7 +70,7 @@ class Entry < ActiveRecord::Base
     if !rows.empty?
       rows.each do |row|
         start_row = start = row
-        stop_row = find({:conditions => ["date between #{start_row.date.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date desc', :limit => 1}).first
+        stop_row = find({:conditions => ["date between #{start_row.date.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1}).first
         if stop_row.nil?
           stop_row = stop = time
         else
