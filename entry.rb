@@ -65,18 +65,35 @@ class Entry < ActiveRecord::Base
   
   def self.report_daily time
     start = lunch = back = stop = lunch_duration = total = nil
-    rows = find({:conditions => "date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}"})
+    rows = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"]})
+    total_ut = 0
     if !rows.empty?
-      rows.each {|row| eval("#{row.status} = row")}
-      stop = time if stop.nil?
-      total_ut = stop.to_i - start.to_i
-      minimum_lunch_duration = (total_ut <= 14400) ? 0 : ((total_ut <= 21600) ? TIME_CONFIG[:lunch][:upto6] : TIME_CONFIG[:lunch][:full])
-      lunch_duration = (!back.nil? && !lunch.nil?) ? back.to_i - lunch.to_i : (!lunch.nil?) ? time.to_i - lunch.to_i : 0
-      req_lunch_duration = (lunch_duration >= minimum_lunch_duration) ? lunch_duration : minimum_lunch_duration
-      lunch_duration = Time.at(lunch_duration + TIME_CONFIG[:fix_time])
-      total = Time.at(stop.to_i - start.to_i - (((total_ut > 21600) || (!lunch.nil? && !back.nil?)) ? req_lunch_duration : 0) + TIME_CONFIG[:fix_time])
-      req_lunch_duration = Time.at(req_lunch_duration + TIME_CONFIG[:fix_time])
+      rows.each do |row|
+        start_row = start = row
+        stop_row = find({:conditions => ["date between #{start_row.date.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date desc', :limit => 1}).first
+        if stop_row.nil?
+          stop_row = stop = time
+        else
+          stop = stop_row
+        end
+        total_ut += (stop_row.to_i - start_row.to_i)
+      end
     end
+    rows = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "(status = 'lunch' or status = 'back')"], :limit => 2})
+    if !rows.empty?
+      rows.each do |row|
+        lunch = row if row.status == 'lunch'
+        back = row if row.status == 'back'
+      end
+    end
+    
+    minimum_lunch_duration = (total_ut <= 14400) ? 0 : ((total_ut <= 22500) ? TIME_CONFIG[:lunch][:upto6] : TIME_CONFIG[:lunch][:full])
+    lunch_duration = (!back.nil? && !lunch.nil?) ? back.to_i - lunch.to_i : (!lunch.nil?) ? time.to_i - lunch.to_i : 0
+    req_lunch_duration = (lunch_duration >= minimum_lunch_duration) ? lunch_duration : minimum_lunch_duration
+    lunch_duration = Time.at(lunch_duration + TIME_CONFIG[:fix_time])
+    total = Time.at(total_ut - (((total_ut > 21600) || (!lunch.nil? && !back.nil?)) ? req_lunch_duration : 0) + TIME_CONFIG[:fix_time])
+    req_lunch_duration = Time.at(req_lunch_duration + TIME_CONFIG[:fix_time])
+    start = lunch = back = stop = lunch_duration = total = nil if total_ut == 0
     return [start, lunch, back, stop, lunch_duration, req_lunch_duration, total]
   end
 end
