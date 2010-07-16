@@ -65,12 +65,12 @@ class Entry < ActiveRecord::Base
   
   def self.report_daily time
     start = lunch = back = stop = lunch_duration = total = nil
-    rows = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"]})
+    rows = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"], :order => 'date asc',})
     total_ut = 0
     if !rows.empty?
       rows.each do |row|
         start_row = start = row
-        stop_row = find({:conditions => ["date between #{start_row.date.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1}).first
+        stop_row = find({:conditions => ["date between #{start_row.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1}).first
         if stop_row.nil?
           stop_row = stop = time
         else
@@ -79,9 +79,10 @@ class Entry < ActiveRecord::Base
         total_ut += (stop_row.to_i - start_row.to_i)
       end
     end
-    rows = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "(status = 'lunch' or status = 'back')"], :limit => 2})
-    if !rows.empty?
-      rows.each do |row|
+    # lunch time and back
+    lunchtime = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "(status = 'lunch' or status = 'back')"]})
+    if !lunchtime.empty?
+      lunchtime.each do |row|
         lunch = row if row.status == 'lunch'
         back = row if row.status == 'back'
       end
