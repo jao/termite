@@ -51,7 +51,7 @@ class TermiteCompletion
       when 'report'
         case typed_param
           when '', /[a-z]+$/i
-            ['daily', 'weekly', 'monthly'].select do |param|
+            ['daily', 'weekly', 'monthly', 'period'].select do |param|
               param[0, typed_param.length] == typed_param && param != typed_param
             end
           else ''
