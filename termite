@@ -279,7 +279,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       case periodic
         when 'daily'
           # daily report
-          status_size = 88
+          status_size = 87
           puts "Daily report".center(status_size).tc('black', 'yellow', 'b')
           current = now.day.to_i
           puts [
@@ -329,13 +329,13 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           today = now
           start_of_week = today.days(-today.wday)
           
-          status_size = 71
+          status_size = 70
           puts "Weekly report".center(status_size).tc('black', 'yellow', 'b')
           
           week_days_header = ["".left(15).tc('black','white')]
           0.upto(6) do |day_of_week|
             day = start_of_week.days(day_of_week)
-            week_days_header << day.weekday.center(7).tc('black', cpick(:date => day), 'b')
+            week_days_header << day.weekday.center(6).tc('black', cpick(:date => day), 'b')
           end
           puts week_days_header.join("|")
           
@@ -360,7 +360,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer = "worked: #{worked_days}d".left(14).tc('black','white','bold')
+          footer = "worked: #{worked_days}d".left(15).tc('black','white','bold')
           footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(18).tc('black','white','bold')
           footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(18).tc('black','white','bold')          
           footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(20).tc('black','white','bold')
@@ -371,13 +371,13 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           today = (this_month != now.month || this_year != now.year) ? Time.local(this_year, this_month, 1) : now
           start_of_week = today.days(-today.wday)
           
-          status_size = 83
-          puts today.month_year.center(status_size).tc('black', 'yellow', 'b')
+          status_size = 82
+          puts today.month_year.center(status_size).black_yellow_bold
           
           week_days_header = []
           0.upto(6) do |wday|
             day = start_of_week.days(wday)
-            week_days_header << day.weekday.center(11).tc('black', cpick(:date => day), 'b')
+            week_days_header << day.weekday.center(10).tc('black', cpick(:date => day), 'b')
           end
           puts week_days_header.join('|')
           

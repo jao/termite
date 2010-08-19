@@ -1,68 +1,101 @@
 class String
-  def init
-    @bg ||= bg_color
-    @fg ||= fg_color
-    @format ||= format
+  def left size=80
+    s = self.chomp
+    s += " " * (size - s.length - 1)
+    " #{s}"
   end
-
+  
+  def right size=80
+    s = self.chomp
+    s = " " * (size - s.length - 1) + s
+    "#{s} "
+  end
+  
+  def center size=80
+    s = self.chomp
+    (s.length..size).each do |n|
+      s = n % 2 == 0 ? " #{s}" : "#{s} "
+    end
+    s
+  end
+  
+  def banner size=80
+    max = size
+    s = ""
+    self.each_line do |l|
+      l = l.chomp
+      max = l.length if l.length > max
+      l += " " while l.length <= size
+      s += " #{l} \n"
+    end
+    el = " "*size
+    if max > size
+      self.banner(max, lines)
+    else
+      lines ? "#{el}\n#{s.chomp}\n#{el}" : "#{s.chomp}"
+    end
+  end
+  
   def tc fg, bg=nil, format=nil
-    init
-    @fg = fg_color(fg)
-    @bg = bg_color(bg) unless bg.nil?
-    @format = format(format) unless format.nil?
+    @fg = fg_color fg
+    @bg = bg_color bg
+    @format = set_format format
     "\e[#{@format};#{@fg};#{@bg}m#{self}\e[0m"
   end
   
-  def success
-    tc('black', 'green')
+  # color patterns
+  def debug
+    self.tc('pink')
   end
   
-  def warning
-    tc('black','yellow')
+  def debug! format=nil
+    self.tc('white','pink',format)
+  end
+  
+  def info! format=nil
+    self.tc('black','white',format)
+  end
+  
+  def more_info! format=nil
+    self.tc('blue','white',format)
+  end
+  
+  def success
+    self.tc('green')
+  end
+  
+  def success? condition, bg=false
+    bg ? self.tc(condition ? 'black' : 'white', condition ? 'green' : 'yellow') : self.tc(condition ? 'green' : 'yellow')
+  end
+  
+  def success! format=nil
+    self.tc('black','green',format)
+  end
+  
+  def warn
+    self.tc('yellow')
+  end
+  
+  def warn! format=nil
+    self.tc('black','yellow',format)
   end
   
   def error
-    tc('white', 'red', 'b')
+    self.tc('red')
   end
   
-  def right n=10
-    s = " #{self.strip} "
-    s = " "+s while s.length < n
-    s
+  def error! format=nil
+    self.tc('white','red',format)
   end
   
-  def left n=10
-    s = " #{self.strip} "
-    s += " " while s.length < n
-    s
-  end
-  
-  def center n=60
-    s = " #{self.strip} "
-    s = (s.length % 2 == 0) ? " "+s : s+" " while s.length < n
-    s
-  end
-
-  def banner n=60, sl=false
-    max = n
-    s = ""
-    self.each_line do |l|
-      l = l.strip.chomp
-      l = "  #{l}  "
-      max = l.length if l.length > max
-      l += " " while l.length < n
-      s += "#{l}\n"
-    end
-    la = lb = " "*n
-    if max > n
-      s.banner max+4, sl
-    else
-      sl ? "\n#{lb}\n#{s.chomp}\n#{la}" : "#{s.chomp}"
-    end
-  end
-
   protected
-  def format fn=nil
+  # color aliases using method missing
+  def method_missing methodname, *args
+    colors = methodname.to_s.split('_')
+    self.tc(colors[0],colors[1],colors[2])
+  end
+  
+  def set_format fn=nil
     case fn
       when 'bold','b':      1
       when 'underline','u': 4
