@@ -31,11 +31,11 @@ require "lib/locale-#{COUNTRY}.rb"
 ## Adium config (set ADIUM to false if you don't want to use this feature)
 ADIUM = true
 ADIUM_STATUS = {
-  :available => 'http://jpcamargo.com',
+  :available => 'Available',
   :lunch => 'Out to lunch',
-  :away => 'Be right back',
-  :sick => 'I am sick',
-  :stop => 'Going home'
+  :away => 'Away',
+  :sick => '',
+  :stop => 'Out for the day'
 }
 
 # 
