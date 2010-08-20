@@ -1,5 +1,6 @@
-class Entry < ActiveRecord::Base
+class Entry # < ActiveRecord::Base
   attr_accessor :timesheet_id, :status, :unixtime, :comments
+  
   def initialize args=[]
     return nil if args.empty?
     @timesheet_id = args[0].to_i
@@ -36,8 +37,8 @@ class Entry < ActiveRecord::Base
   end
   
   def method_missing methodname, *args
-    return (methodname.to_s.gsub(/\?/,'') == status) if methodname.to_s =~ /\?$/i && respond_to?(methodname.to_s.gsub(/\?/,''))
-    puts "methodname(#{args.inspect})".pink
+    return (methodname.to_s.gsub('?','') == status) if methodname.to_s =~ /\?$/i
+    return false
   end
   
   def self.header
