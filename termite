@@ -310,7 +310,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
               ((lunch.nil?) ? '' : lunch.time).right(10).tc(cpick(:status => 'lunch', :date => lunch.to_i)),
               ((back.nil?) ? '' : back.time).right(10).tc(cpick(:status => 'back', :date => back.to_i)),
               ((stop.nil? || stop==now) ? '' : stop.time).right(10).tc(cpick(:status => 'stop', :date => stop.to_i)),
-              ((lunch_duration.to_i > 0 && !start.nil? && !lunch.nil? && !back.nil?) ? lunch_duration.time : '').right(10).tc(cpick(:status => 'lunch_duration', :date => lunch_duration.to_i)),
+              ((lunch_duration.to_i > 0 && !start.nil? && !lunch.nil?) ? lunch_duration.time : '').right(10).tc(cpick(:status => 'lunch_duration', :date => lunch_duration.to_i)),
               ((req_lunch_duration.to_i > 0 && !start.nil?) ? req_lunch_duration.time : '').right(10).tc(cpick(:status => 'lunch_duration', :date => req_lunch_duration.to_i)),
               ((total.nil?) ? '' : total.time).right(10).tc(cpick(:status => 'total', :date => total.to_i))
             ].join('|')
