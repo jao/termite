@@ -10,9 +10,20 @@ class Entry < ActiveRecord::Base
   
   def to_i; unixtime; end
   def to_s; status; end
+  def to_time; Time.at(unixtime); end
   def date; Time.at(unixtime).strftime("%d/%m/%Y"); end
   def time; Time.at(unixtime).strftime("%H:%M"); end
   def datetime; Time.at(unixtime).strftime("%d/%m/%Y %H:%M"); end
+  
+  def to_list
+    [
+      timesheet_id.to_s.right(7),
+      status.left(8),
+      date.left(12),
+      time.right(6).tc(cpick({:status => status, :date => unixtime})),
+      comments.left(75)
+    ].join('|')
+  end
   
   def status_message
     return case status
@@ -24,12 +35,28 @@ class Entry < ActiveRecord::Base
     end
   end
   
-  def self.find args={}
+  def method_missing methodname, *args
+    return (methodname.to_s.gsub(/\?/,'') == status) if methodname.to_s =~ /\?$/i && respond_to?(methodname.to_s.gsub(/\?/,''))
+    puts "methodname(#{args.inspect})".pink
+  end
+  
+  def self.header
+    [
+      'id'.right(7),
+      'status'.left(8),
+      'date'.left(12),
+      'time'.left(7),
+      'comments'.left(75)
+    ].join('|').black_white
+  end
+  
+  def self.find *args
+    args = args.extract_options!
     sql = "select * from timesheet"
     sql += conditions(args[:conditions]) if args.key?(:conditions)
     sql += order(args[:order]) if args.key?(:order)
     sql += limit(args[:limit]) if args.key?(:limit)
-    rows = DB.execute(sql)
+    rows = DB.execute sql
     if !rows.empty?
       rows.map{|row| new(row)}
     else
@@ -38,39 +65,42 @@ class Entry < ActiveRecord::Base
   end
   
   def self.last
-    find({:order => 'date desc', :limit => 1}).first
+    find(:order => 'date desc', :limit => 1).first
   end
   
-  def self.create args={}
-    DB.execute("insert into timesheet (date, status) values(#{args[:date]},'#{args[:status]}')")
+  def self.create *args
+    args = args.extract_options!
+    DB.execute "insert into timesheet (date, status, comments) values(#{args[:date]},'#{args[:status]}','#{args[:comments]}')"
   end
   
-  def self.update args={}
-    DB.execute("update timesheet set #{fields_to_update(args[:fields])} #{conditions(args[:conditions])}")
+  def self.update *args
+    args = args.extract_options!
+    DB.execute "update timesheet set #{fields_to_update(args[:fields])} #{conditions(args[:conditions])}"
   end
   
-  def self.remove args={}
-    DB.execute("delete from timesheet #{conditions(args[:conditions])}")    
+  def self.remove *args
+    args = args.extract_options!
+    DB.execute "delete from timesheet #{conditions(args[:conditions])}"
   end
   
-  def self.conditions(args); return build_sql(args, 'where', ' and '); end
-  def self.order(args); return build_sql(args, 'order by'); end
-  def self.limit(args); return build_sql(args, 'limit');end
-  def self.fields_to_update(args); return build_sql(args); end
+  def self.conditions(args); build_sql(args, 'where', ' and '); end
+  def self.order(args); build_sql(args, 'order by'); end
+  def self.limit(args); build_sql(args, 'limit'); end
+  def self.fields_to_update(args); build_sql(args); end
   
   def self.build_sql args, action='', delimiter=', '
-    return '' if args == '' or (args.is_a?(Array) and args.empty?)
+    return '' if args == '' || (args.is_a?(Array) && args.empty?)
     " #{action} #{args.is_a?(Array) ? args.join(delimiter) : args}"
   end
   
   def self.report_daily time
     start = lunch = back = stop = lunch_duration = total = nil
-    rows = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"], :order => 'date asc',})
+    rows = find :conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"], :order => 'date asc'
     total_ut = 0
     if !rows.empty?
       rows.each do |row|
         start_row = start = row
-        stop_row = find({:conditions => ["date between #{start_row.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1}).first
+        stop_row = find(:conditions => ["date between #{start_row.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1).first
         if stop_row.nil?
           stop_row = stop = time
         else
@@ -80,7 +110,7 @@ class Entry < ActiveRecord::Base
       end
     end
     # lunch time and back
-    lunchtime = find({:conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "(status = 'lunch' or status = 'back')"]})
+    lunchtime = find :conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "(status = 'lunch' or status = 'back')"]
     if !lunchtime.empty?
       lunchtime.each do |row|
         lunch = row if row.status == 'lunch'

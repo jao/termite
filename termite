@@ -17,6 +17,7 @@
 $LOAD_PATH << File.dirname(__FILE__)
 require 'util.rb'
 require 'sqlite3'
+require 'getoptlong'
 require 'active_record'
 require 'entry.rb'
 
@@ -121,108 +122,106 @@ end
 def show_status n
   @row ||= Entry.last
   if !@row.nil?
-    "#{@row.status_message} since #{@row.datetime} ~ #{Time.now.datetimesec}".left(n).tc('green', nil, 'b')
+    "#{@row.status_message} since #{@row.datetime} ~ #{Time.now.datetimesec}".left(n).green
   else
-    "Please use 'termite start' to initialize the database.".left(n).tc('yellow', nil, 'b')
+    "Please use 'termite start' to initialize the database.".left(n).yellow
   end
 end
 
-def list_header
-  [
-    'id'.right(7),
-    'status'.left(8),
-    'date'.left(12),
-    'time'.left(7),
-    'comments'.left(75)
-  ].join('|').tc('black', 'white', 'b')
-end
-
-def list_row row
-  [
-    row.timesheet_id.to_s.right(7),
-    row.status.left(8),
-    row.date.left(12),
-    row.time.right(6).tc(cpick({:status => row.status, :date => row.to_i})),
-    row.comments.left(75)
-  ].join('|')
+# get options from ARGV
+opts = GetoptLong.new(
+  ['--no-header', GetoptLong::NO_ARGUMENT],
+  ['-m', GetoptLong::REQUIRED_ARGUMENT]
+)
+comments = ''
+opts.each do |option,value|
+  comments = value if option.to_s == '-m'
+  no_header = true if option.to_s == '--no-header'
 end
 
 # now deal with the commands
 begin
   now = Time.now
-  status_size = 60
+  status_size = 80
   case arg = ARGV.shift
     when 'add'
-      command = ARGV[0]
-      date = Time.parse(ARGV[1])
+      command = ARGV.shift
+      date = Time.parse(ARGV.shift)
       if ['start','stop','lunch','back'].include?(command) && date.is_a?(Time)
-        Entry.create({:date => date.to_i, :status => command})
+        Entry.create :date => date.to_i, :status => command, :comments => comments
       end
     when 'edit'
-      id = ARGV[0]
-      date = Time.parse(ARGV[1])
+      id = ARGV.shift
+      date = Time.parse(ARGV.shift)
       puts "#{id} #{date.inspect}"
       if date.is_a?(Time) and id =~ /\d+/
-        row = Entry.find({:conditions => "timesheet_id = #{id}"}).first
+        row = Entry.find(:conditions => "timesheet_id = #{id}").first
         if !row.nil?
-          puts list_header
-          puts list_row(row)
+          puts Entry.header
+          puts row.to_list
           puts ""
           puts "are you sure you want to change the date in this entry to '#{date.iso}'? [y/N]".warning
           confirmation = STDIN.gets.chomp
           if confirmation =~ /y/i
-            Entry.update({:conditions => "timesheet_id=#{id}", :fields => "date=#{date.to_i}"})
+            Entry.update :conditions => "timesheet_id=#{id}", :fields => ["date=#{date.to_i}","comments='#{comments}'"]
           end
         end
       else
-        puts "The correct date format is YYYY-mm-dd HH:MM".banner.warning
+        puts "The correct date format is YYYY-mm-dd HH:MM".banner.warning!
       end
     when 'delete'
-      id = ARGV[0]
+      id = ARGV.shift
       if id =~ /\d+/
-        row = Entry.find({:conditions => "timesheet_id = #{id}"}).first
+        row = Entry.find(:conditions => "timesheet_id = #{id}").first
         if !row.nil?
-          puts list_header
-          puts list_row(row)
+          puts Entry.header
+          puts row.to_list
           puts ""
           puts "are you sure you want to delete this entry? [y/N]".warning
           confirmation = STDIN.gets.chomp
-          if confirmation =~ /y/i
-            Entry.remove({:conditions => "timesheet_id=#{id}"})
-          end
+          Entry.remove :conditions => "timesheet_id=#{id}" if confirmation =~ /y/i
         end
       else
-        puts "The correct date format is YYYY-mm-dd HH:MM".banner.warning
-      end      
+        puts "You need to entry a valid ID.".banner.error!
+      end
     when 'update'
       row = Entry.last
       if !row.nil?
-        puts list_header
-        puts list_row(row)
+        puts Entry.header
+        puts row.to_list
         puts ""
         puts "are you sure you want to change the date in this entry to '#{now.iso}'? [y/N]".warning
         confirmation = STDIN.gets.chomp
-        if confirmation =~ /y/i
-          Entry.update({:conditions => "timesheet_id=#{row.timesheet_id}", :fields => "date=#{now.to_i}"})
-        end
+        Entry.update :conditions => "timesheet_id=#{row.timesheet_id}", :fields => ["date=#{now.to_i}","comments='#{comments}'"] if confirmation =~ /y/i
       end
     when 'list'
-      limit = (ARGV[0] =~ /\d+/) ? ARGV.shift : 14
+      limit = ARGV.shift || 10
       rows = Entry.find({:order => 'date desc', :limit => limit})
-      status_size = 113
+      status_size = 112
       unless ARGV.include?('--no-header')
-        puts "Entries list - #{rows.size} entrie(s)".center(status_size).tc('black', 'yellow', 'b')
-        puts list_header
+        puts "Last #{rows.size} entries".center(status_size).black_yellow_bold
+        puts Entry.header
       end
+      worked_hours = 0
+      worked_days = []
       rows.each do |row|
-        puts list_row(row)
+        worked_hours += row.to_i - TIME_CONFIG[:fix_time]
+        worked_days << row.date if row.to_i > 0 && ![0,6].include?(row.to_time.wday) && !row.to_time.is_holiday?
+        puts row.to_list
       end
-      puts ""
+      worked_days = worked_days.uniq.size
+      total = Time.at(worked_hours + TIME_CONFIG[:fix_time])
+      average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
+      
+      footer = ''
+      footer += "worked: #{worked_days} days".left(56).black_white_bold
+      footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').left(56).black_white_bold
+      puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
     when 'sick'
       row = Entry.last
-      if !row.nil? and row.status == 'stop'
+      if !row.nil? && row.stop? # == 'stop'
         today = Time.local(now.year,now.month,now.day)
-        Entry.create({:date => today.to_i, :status => arg})
+        Entry.create :date => today.to_i, :status => arg, :comments => comments
         set_adium_status('away', ADIUM_STATUS[:sick])
       else
         puts %{
@@ -232,8 +231,8 @@ Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
       end
     when 'start'
       row = Entry.last
-      if !row.nil? and row.status == 'stop'
-        Entry.create({:date => now.to_i, :status => arg})
+      if !row.nil? && row.stop? # status == 'stop'
+        Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('available', ADIUM_STATUS[:available])
       else
         puts %{
@@ -243,8 +242,8 @@ Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
       end
     when 'lunch'
       row = Entry.last
-      if !row.nil? and row.status == 'start'
-        Entry.create({:date => now.to_i, :status => arg})
+      if !row.nil? && row.start? # status == 'start'
+        Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('away', ADIUM_STATUS[:lunch])
       else
         puts %{
@@ -254,8 +253,8 @@ Please use "termite add start [YYYY-mm-dd HH:MM], and try again."
       end
     when 'back'
       row = Entry.last
-      if !row.nil? and row.status == 'lunch'
-        Entry.create({:date => now.to_i, :status => arg})
+      if !row.nil? && row.lunch? # status == 'lunch'
+        Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('available', ADIUM_STATUS[:available])
       else
         puts %{
@@ -265,8 +264,8 @@ Please use "termite add lunch [YYYY-mm-dd HH:MM], and try again."
       end
     when 'stop'
       row = Entry.last
-      if !row.nil? and ['start','back'].include?(row.status)
-        Entry.create({:date => now.to_i, :status => arg})
+      if !row.nil? && (row.start? || row.back?) # ['start','back'].include?(row.status)
+        Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('away', ADIUM_STATUS[:stop])
       else
         puts %{
@@ -280,7 +279,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
         when 'daily'
           # daily report
           status_size = 87
-          puts "Daily report".center(status_size).tc('black', 'yellow', 'b')
+          puts "Daily report".center(status_size).black_yellow_bold
           current = now.day.to_i
           puts [
             'day'.left(11),
@@ -291,7 +290,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             'lunch T'.right(10),
             '- lunch'.right(10),
             'work T'.right(10)
-          ].join('|').tc('black','white','bold')
+          ].join('|').black_white_bold
           
           # total values
           worked_hours = 0
@@ -310,8 +309,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
               ((lunch.nil?) ? '' : lunch.time).right(10).tc(cpick(:status => 'lunch', :date => lunch.to_i)),
               ((back.nil?) ? '' : back.time).right(10).tc(cpick(:status => 'back', :date => back.to_i)),
               ((stop.nil? || stop==now) ? '' : stop.time).right(10).tc(cpick(:status => 'stop', :date => stop.to_i)),
-              ((lunch_duration.to_i > 0) ? lunch_duration.time : '').right(10).tc(cpick(:status => 'lunch_duration', :date => lunch_duration.to_i)),
-              ((req_lunch_duration.to_i > 0) ? req_lunch_duration.time : '').right(10).tc(cpick(:status => 'lunch_duration', :date => req_lunch_duration.to_i)),
+              ((lunch_duration.to_i > 0 && !start.nil?) ? lunch_duration.time : '').right(10).tc(cpick(:status => 'lunch_duration', :date => lunch_duration.to_i)),
+              ((req_lunch_duration.to_i > 0 && !start.nil?) ? req_lunch_duration.time : '').right(10).tc(cpick(:status => 'lunch_duration', :date => req_lunch_duration.to_i)),
               ((total.nil?) ? '' : total.time).right(10).tc(cpick(:status => 'total', :date => total.to_i))
             ].join('|')
             today = today.yesterday
@@ -320,19 +319,19 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer += "worked: #{worked_days} days".left(21).tc('black','white','bold')
-          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(21).tc('black','white','bold')
-          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(21).tc('black','white','bold')          
-          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(25).tc('black','white','bold')
-          puts footer + "\n\n" if worked_days > 0 or worked_hours > 0
+          footer += "worked: #{worked_days} days".left(21).black_white_bold
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(21).black_white_bold
+          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(21).black_white_bold
+          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(25).black_white_bold
+          puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
         when 'weekly'
           today = now
           start_of_week = today.days(-today.wday)
           
           status_size = 70
-          puts "Weekly report".center(status_size).tc('black', 'yellow', 'b')
+          puts "Weekly report".center(status_size).black_yellow_bold
           
-          week_days_header = ["".left(15).tc('black','white')]
+          week_days_header = ["".left(15).black_white]
           0.upto(6) do |day_of_week|
             day = start_of_week.days(day_of_week)
             week_days_header << day.weekday.center(6).tc('black', cpick(:date => day), 'b')
@@ -346,7 +345,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           0.upto(3) do |week|
             start_of_week = today.days(-today.wday - 7 * week)
             end_of_week = start_of_week.days(6)
-            week_days = ["#{start_of_week.day_month} - #{end_of_week.day_month}".left(15).tc('black','white')]
+            week_days = ["#{start_of_week.day_month} - #{end_of_week.day_month}".left(15).black_white]
             0.upto(6) do |day_of_week|
               (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = Entry.report_daily start_of_week.days(day_of_week)
               worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
@@ -360,10 +359,10 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer = "worked: #{worked_days}d".left(15).tc('black','white','bold')
-          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(18).tc('black','white','bold')
-          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(18).tc('black','white','bold')          
-          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(20).tc('black','white','bold')
+          footer = "worked: #{worked_days}d".left(15).black_white_bold
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(18).black_white_bold
+          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(18).black_white_bold
+          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(20).black_white_bold
           puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
         when 'monthly'
           this_month = ARGV.shift || now.month
@@ -413,10 +412,10 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer = "worked: #{worked_days} days".left(16).tc('black','white','bold')
-          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(20).tc('black','white','bold')
-          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(22).tc('black','white','bold')          
-          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(25).tc('black','white','bold')
+          footer = "worked: #{worked_days} days".left(16).black_white_bold
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(20).black_white_bold
+          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(22).black_white_bold
+          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(24).black_white_bold
           puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
         when 'period'          
           start_date = ARGV.shift || now.days(-30).date
@@ -428,7 +427,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           week_days_header = []
           0.upto(6) do |wday|
             day = start_of_week.days(wday)
-            week_days_header << day.weekday.center(14).tc('black', cpick(:date => day), 'b')
+            week_days_header << day.weekday.center(13).tc('black', cpick(:date => day), 'b')
           end
           
           if start_date.is_a?(String)
@@ -445,8 +444,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             end_day = end_date
           end
           
-          status_size = 104
-          puts "#{day.date} - #{end_day.date}".center(status_size).tc('black', 'yellow', 'b')
+          status_size = 103
+          puts "Period: #{day.date} - #{end_day.date}".center(status_size).black_yellow_bold
           puts week_days_header.join('|')
           
           # total values
@@ -454,7 +453,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           worked_days = 0
           
           days = {}
-          while day.to_i < end_day.to_i
+          while day.to_i <= end_day.to_i
             (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = Entry.report_daily day
             worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
             worked_days += 1 if !start.nil? && ![0,6].include?(day.wday) && !day.is_holiday?
@@ -473,7 +472,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             end
           end
           if !week.empty?
-            week << "".left(14) while week.size <= 6
+            week << "".left(14) while week.size < 7
             puts week.join('|')
           end
           
@@ -481,19 +480,17 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer = "worked: #{worked_days} days".left(25).tc('black','white','bold')
-          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(25).tc('black','white','bold')
-          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(26).tc('black','white','bold')
-          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(28).tc('black','white','bold')
+          footer = "worked: #{worked_days} days".left(25).black_white_bold
+          footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(25).black_white_bold
+          footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(26).black_white_bold
+          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(28).black_white_bold
           puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
       end
     when 'droptable'
-      puts "Are you sure you want to drop your timesheet table? [y/N]"
-      puts 'WARNING: THIS CANNOT BE UNDONE!'.tc('yellow',nil,'blink')
+      puts "Are you sure you want to drop your timesheet table? [y/N]".warning
+      puts 'WARNING: THIS CANNOT BE UNDONE!'.banner.black_yellow_blink
       confirmation = STDIN.gets.chomp
-      if confirmation =~ /y/i
-        DB.execute("drop table timesheet")
-      end
+      DB.execute("drop table timesheet") if confirmation =~ /y/i
     when 'help', /[^\-]\w+/
       puts help_message
   end
@@ -504,7 +501,7 @@ rescue Exception => e
 end
 
 unless ARGV.include?('--no-status')
-  if arg == '-f' or ARGV.include?('-f')
+  if arg == '-f' || ARGV.include?('-f')
     `clear`
     while true
       print "\r#{show_status(status_size)}"

@@ -1,18 +1,18 @@
 class String
   def left size=80
-    s = self.chomp
-    s += " "*(size - s.length - 1)
-    s = " #{s}"
+    s = " #{self.chomp} "
+    s += " "*(size - s.length) if size > s.length
+    s
   end
   
   def right size=80
-    s = self.chomp
-    s = " " * (size - s.length - 1) + s
-    "#{s} "
+    s = " #{self.chomp} "
+    s = " "*(size - s.length) + s if size > s.length
+    s
   end
   
   def center size=80
-    s = self.chomp
+    s = " #{self.chomp} "
     (s.length..size).each do |n|
       s = n % 2 == 0 ? " #{s}" : "#{s} "
     end
@@ -23,16 +23,16 @@ class String
     max = size
     s = ""
     self.each_line do |l|
-      l = l.chomp
+      l = " #{l.chomp} "
       max = l.length if l.length > max
-      l += " " while l.length <= size
-      s += " #{l} \n"
+      l += " "*(size-l.length)
+      s += "#{l}\n"
     end
     el = " "*size
     if max > size
       self.banner(max, lines)
     else
-      lines ? "#{el}\n#{s.chomp}\n#{el}" : "#{s.chomp}"
+      lines ? "#{el}\n#{s.chomp}\n#{el}" : s.chomp
     end
   end
   
