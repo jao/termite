@@ -1,8 +1,8 @@
 class String
   def left size=80
     s = self.chomp
-    s += " " * (size - s.length - 1)
-    " #{s}"
+    s += " "*(size - s.length - 1)
+    s = " #{s}"
   end
   
   def right size=80
