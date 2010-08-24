@@ -34,8 +34,8 @@ ADIUM_STATUS = {
   :available => 'Available',
   :lunch => 'Out to lunch',
   :away => 'Away',
-  :sick => '',
-  :stop => 'Out for the day'
+  :sick => 'Do not disturb',
+  :stop => 'Extended away'
 }
 
 # 
@@ -131,12 +131,15 @@ end
 # get options from ARGV
 opts = GetoptLong.new(
   ['--no-header', GetoptLong::NO_ARGUMENT],
-  ['-m', GetoptLong::REQUIRED_ARGUMENT]
+  ['-m', GetoptLong::REQUIRED_ARGUMENT],
+  ['-f', GetoptLong::NO_ARGUMENT]
 )
 comments = ''
 no_header = false
+fixed = false
 opts.each do |option,value|
   comments = value if option.to_s == '-m'
+  fixed = true if option.to_s == '-f'
   no_header = true if option.to_s == '--no-header'
 end
 
@@ -152,10 +155,10 @@ begin
         Entry.create :date => date.to_i, :status => command, :comments => comments
       end
     when 'edit'
-      id = ARGV.shift
-      date = Time.parse(ARGV.shift)
+      id = ARGV.shift if ARGV[0] =~ /^\d+$/
+      date = Time.parse ARGV.shift
       puts "#{id} #{date.inspect}"
-      if date.is_a?(Time) and id =~ /\d+/
+      if date.is_a?(Time) && id =~ /^\d+$/
         row = Entry.find(:conditions => "timesheet_id = #{id}").first
         if !row.nil?
           puts Entry.header
@@ -163,9 +166,10 @@ begin
           puts ""
           puts "are you sure you want to change the date in this entry to '#{date.iso}'? [y/N]".warning
           confirmation = STDIN.gets.chomp
-          if confirmation =~ /y/i
-            Entry.update :conditions => "timesheet_id=#{id}", :fields => ["date=#{date.to_i}","comments='#{comments}'"]
-          end
+          fields = ["date=#{now.to_i}"]
+          fields << "comments='#{comments}'" if !comments.blank?
+          
+          Entry.update :conditions => "timesheet_id=#{id}", :fields => fields if confirmation =~ /y/i
         end
       else
         puts "The correct date format is YYYY-mm-dd HH:MM".banner.warning!
@@ -193,7 +197,9 @@ begin
         puts ""
         puts "are you sure you want to change the date in this entry to '#{now.iso}'? [y/N]".warning
         confirmation = STDIN.gets.chomp
-        Entry.update :conditions => "timesheet_id=#{row.timesheet_id}", :fields => ["date=#{now.to_i}","comments='#{comments}'"] if confirmation =~ /y/i
+        fields = ["date=#{now.to_i}"]
+        fields << "comments='#{comments}'" if !comments.blank?
+        Entry.update :conditions => "timesheet_id=#{row.timesheet_id}", :fields => fields if confirmation =~ /y/i
       end
     when 'list'
       limit = ARGV.shift || 10
@@ -491,7 +497,10 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       puts "Are you sure you want to drop your timesheet table? [y/N]".warning
       puts 'WARNING: THIS CANNOT BE UNDONE!'.banner.black_yellow_blink
       confirmation = STDIN.gets.chomp
-      DB.execute("drop table timesheet") if confirmation =~ /y/i
+      puts "Are you REALLY sure you want to drop your timesheet table? [y/N]".warning
+      puts 'WARNING: THIS CANNOT BE UNDONE!'.banner.black_yellow_blink
+      extra_confirmation = STDIN.gets.chomp      
+      DB.execute("drop table timesheet") if confirmation =~ /y/i && extra_confirmation =~ /y/i
     when 'help', /[^\-]\w+/
       puts help_message
   end
@@ -501,8 +510,8 @@ rescue Exception => e
   puts "An error ocurred #{e.message}\n  #{e.backtrace.join("\n  ")}".error
 end
 
-unless ARGV.include?('--no-status')
-  if arg == '-f' || ARGV.include?('-f')
+unless no_header
+  if fixed
     `clear`
     while true
       print "\r#{show_status(status_size)}"
