@@ -158,6 +158,8 @@ begin
       id = ARGV.shift if ARGV[0] =~ /^\d+$/
       date = Time.parse ARGV.shift
       puts "#{id} #{date.inspect}"
+      fields = ["date=#{date.to_i}"]
+      fields << "comments='#{comments}'" if !comments.blank?
       if date.is_a?(Time) && id =~ /^\d+$/
         row = Entry.find(:conditions => "timesheet_id = #{id}").first
         if !row.nil?
@@ -166,9 +168,6 @@ begin
           puts ""
           puts "are you sure you want to change the date in this entry to '#{date.iso}'? [y/N]".warning
           confirmation = STDIN.gets.chomp
-          fields = ["date=#{now.to_i}"]
-          fields << "comments='#{comments}'" if !comments.blank?
-          
           Entry.update :conditions => "timesheet_id=#{id}", :fields => fields if confirmation =~ /y/i
         end
       else
