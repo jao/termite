@@ -117,11 +117,11 @@ class Entry # < ActiveRecord::Base
             back = row if row.back?
           end
         end
-        minimum_lunch_duration = (total_ut <= 14400) ? 0 : ((total_ut <= 22500) ? TIME_CONFIG[:lunch][:upto6] : TIME_CONFIG[:lunch][:full])
         lunch_duration = (!back.nil? && !lunch.nil?) ? back.to_i - lunch.to_i : (!lunch.nil?) ? time.to_i - lunch.to_i : 0
+        minimum_lunch_duration = [0,6].include?(time.wday) || total_ut <= 22500 ? 0 : TIME_CONFIG[:lunch][:full]
         req_lunch_duration = (lunch_duration >= minimum_lunch_duration) ? lunch_duration : minimum_lunch_duration
         lunch_duration = Time.at(lunch_duration + TIME_CONFIG[:fix_time])
-        total = Time.at(total_ut - (((total_ut > 21600) || (!lunch.nil? && !back.nil?)) ? req_lunch_duration : 0) + TIME_CONFIG[:fix_time])
+        total = Time.at(total_ut - ((total_ut > 22500) || (!lunch.nil? && !back.nil?) ? req_lunch_duration : 0) + TIME_CONFIG[:fix_time])
         req_lunch_duration = Time.at(req_lunch_duration + TIME_CONFIG[:fix_time])
         start = lunch = back = stop = lunch_duration = total = nil if total_ut == 0
         periods << [start, lunch, back, stop, lunch_duration, req_lunch_duration, total]
