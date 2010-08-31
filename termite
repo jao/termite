@@ -372,30 +372,20 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
             lines = 1
             0.upto(6) do |day_of_week|
               periods = Entry.report start_of_week.days(day_of_week)
-              work_periods = []
+              total_time = nil
               periods.each do |work_period|
                 (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = work_period
                 worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
                 worked_days += 1 if !start.nil? && ![0,6].include?(start_of_week.days(day_of_week).wday) && !start_of_week.days(day_of_week).is_holiday? && periods.first == work_period
-                work_periods << ((total.nil?) ? ''.right(7) : total.time).right(7).tc(cpick(:status => 'total', :date => total.to_i))
-              end
-              lines = work_periods.size if work_periods.size > lines
-              week_days << work_periods
-            end
-            0.upto(week_days.size) do |day|
-              if week_days[day].is_a?(Array)
-                while week_days[day].size < lines
-                  if week_days.first == week_days[day]
-                    week_days[day] << ''.left(15).black_white
-                  else
-                    week_days[day] << ''.right(7)
-                  end
+                if total_time.nil?
+                  total_time = total
+                else
+                  total_time += total.to_i
                 end
               end
+              week_days << (total_time.nil? ? '' : total_time.time).right(7).tc(cpick(:status => 'total', :date => total_time.to_i))
             end
-            (0...lines).each do |line|
-              puts week_days.map{|day| day[line]}.join('|')
-            end
+            puts week_days.join('|')
           end
           
           total = Time.at(worked_hours + TIME_CONFIG[:fix_time])
@@ -436,8 +426,11 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
               (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = work_period
               worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
               worked_days += 1 if !start.nil? && ![0,6].include?(day.wday) && !day.is_holiday? && periods.first == work_period
-              total_time += total.to_i if !total_time.nil?
-              total_time = total if total_time.nil?
+              if total_time.nil?
+                total_time = total
+              else
+                total_time += total.to_i
+              end
             end
             month[day.day] = [day.wday, total_time]
             day = day.tomorrow
