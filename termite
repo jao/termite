@@ -380,7 +380,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
                 if total_time.nil?
                   total_time = total
                 else
-                  total_time += total.to_i
+                  total_time += total.to_i - TIME_CONFIG[:fix_time]
                 end
               end
               week_days << (total_time.nil? ? '' : total_time.time).right(7).tc(cpick(:status => 'total', :date => total_time.to_i))
@@ -429,7 +429,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
               if total_time.nil?
                 total_time = total
               else
-                total_time += total.to_i
+                total_time += total.to_i - TIME_CONFIG[:fix_time]
               end
             end
             month[day.day] = [day.wday, total_time]
