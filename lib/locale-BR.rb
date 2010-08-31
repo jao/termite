@@ -3,7 +3,7 @@ TIME_CONFIG = {
   :end => 18,
   :workday => 8,
   :lunch => {:upto6 => 900, :full => 3600},
-  :fix_time => 10800
+  :fix_time => Time.now.gmt_offset.abs
 }
 
 HOLIDAYS = [

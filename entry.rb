@@ -110,12 +110,13 @@ class Entry # < ActiveRecord::Base
         total_ut += (stop_row.to_i - start_row.to_i)
       end
     end
+    
     # lunch time and back
     lunchtime = find :conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "(status = 'lunch' or status = 'back')"]
     if !lunchtime.empty?
       lunchtime.each do |row|
-        lunch = row if row.status == 'lunch'
-        back = row if row.status == 'back'
+        lunch = row if row.lunch?
+        back = row if row.back?
       end
     end
     
