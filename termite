@@ -278,6 +278,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       case periodic
         when 'daily'
           # daily report
+          days = 7
+          days = ARGV.shift.to_i if ARGV[0] =~ /^\d+$/
           status_size = 87
           puts "Daily report".center(status_size).black_yellow_bold
           current = now.day.to_i
@@ -297,7 +299,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           worked_days = 0
           
           today = now
-          0.upto(7) do |count|
+          1.upto(days) do |count|
             periods = Entry.report today
             periods.each do |work_period|
               (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = work_period

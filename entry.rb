@@ -95,7 +95,7 @@ class Entry # < ActiveRecord::Base
   end
   
   def self.report time
-    start = lunch = back = stop = lunch_duration = total = nil
+    start = lunch = back = stop = lunch_duration = req_lunch_duration = total = nil
     periods = []
     rows = find :conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"], :order => 'date desc'
     if !rows.empty?
@@ -127,7 +127,7 @@ class Entry # < ActiveRecord::Base
         periods << [start, lunch, back, stop, lunch_duration, req_lunch_duration, total]
       end
     end
-    
+    periods << [start, lunch, back, stop, lunch_duration, req_lunch_duration, total] if periods.empty?
     return periods
   end
 end
