@@ -78,37 +78,30 @@ class TermiteCompletion
         if typed_id == '' && typed_date == ''
           puts ''
           "insert an entry's id and a date"
-        elsif typed_id =~ /\d+/ && typed_date == ''
+        elsif typed_id =~ /^\d+$/ && typed_date == ''
           puts '' 
           "insert a date formatted as 'YYYY-mm-dd HH:MM'"
-        elsif typed_id =~ /\d+/
+        elsif typed_id =~ /^\d+$/
           case typed_date
             when /^("|')$/
               [Time.now.strftime("%Y-%m-%d %H:%M") + typed_date]
-            # when /^("|')\d+$/
-            #   [now.year.to_s + '-']
-            # when /^("|')\d+\-$/
-            #   [now.month.to_s + '-']
-            # when /^("|')\d+\-\d+\-$/
-            #   [now.day.to_s + ' ']
-            # when /^("|')\d+\-\d+\-\d+ $/
-            #   [now.hour.to_s + ':']
-            # when /^("|')\d+\-\d+\-\d+ \d+\:$/
-            #   [now.min.to_s + typed_date[0,1]]
             else
               ''
-              # "insert a date formatted as 'YYYY-mm-dd HH:MM'"
           end
         else
           ''
         end
-      when 'delete'
+      when 'remove'
         if typed_id == ''
           puts ''
           "insert an entry's id"
         else
           ''
         end
+      when 'update'
+        ''
+      # when 'reload'
+      #   ''
       else matching_features
     end
   end
@@ -136,8 +129,8 @@ class TermiteCompletion
   end
   
   def generate_features
-    features = `termite help --no-status`.split("\n")[2..-1].collect {|line| line.split(/\s+/)[0]}
-    File.open(cache_file, 'w') { |f| f.write features.delete_if{|f| f == ''}.sort{|a,b| a <=> b}.join("\n") }
+    features = `termite help`.split("\n")[2..-1].collect {|line| line.split(/\s+/)[0]}.compact
+    File.open(cache_file, 'w') { |f| f.write features.delete_if{|f| f == ''}.sort{|a,b| a <=> b}.map{|f| f.gsub(/\e\[[0-9\;]+m/,'') }.join("\n") }
     features
   end
 end

@@ -1,6 +1,6 @@
 # Termite
 
-* Version: 0.7
+* Version: 0.8
 * Author: joão paulo camargo
 
 Termite is an open source time tracker command line ruby script/tool that uses sqlite. It is very simple, and it is meant for personal time management only (thus the simple features).
@@ -82,12 +82,11 @@ Move the database there, and create a symbolic link inside this script's directo
 * add a config file option (at the user's home directory)
 * add database migration-like updates
 * add termite source auto-updates (probably using git)
-* add the option to start and stop working more than once a day, or at least break intervals other than lunch
 * add support to projects, and reports based on projects
 * add support to tags, and reports based on tags
 * add an online sync feature to keep databases updated between computers
-* add an export feature to convert the reports to pdf, csv, etc. (maybe now even to google docs using googlecl)
 * add other countries locale information
+* add an export feature to convert the reports to pdf, csv, etc. (maybe now even to google docs using googlecl)
 
 ## License
 

@@ -42,21 +42,26 @@ ADIUM_STATUS = {
 # Script starts here (change it if you want to)
 # 
 
-help_message = %{Usage: termite [command] [[params]]
-Commands:
-start     Marks that you started working
-stop      Marks that you stopped working
-lunch     Marks that you are out to lunch
-back      Marks that you are back from lunch
-sick      Marks that you are sick for the day
-list      List the last n entries
-add       Adds a new entry, used to add times for previous dates and times
-edit      Updates an entry by the given id with given date 
-update    Updates the last entry, setting the date and time to now
-delete    Removes an entry by the given id
-report    Shows a report of the latest information
-help      Shows this message
+help_message = %{#{'Usage: termite [command] [[params]]'.green}
+#{'Commands:'.yellow}
+#{'start'.yellow}     Marks that you started working
+#{'stop'.yellow}      Marks that you stopped working
+#{'lunch'.yellow}     Marks that you are out to lunch
+#{'back'.yellow}      Marks that you are back from lunch
+#{'sick'.yellow}      Marks that you are sick for the day
+
+#{'list'.yellow}      List the last n entries
+#{'report'.yellow}    Shows a report of the latest information
+
+#{'create'.yellow}    Adds a new entry, used to add times for previous dates and times
+#{'edit'.yellow}      Updates an entry by the given id with given date 
+#{'remove'.yellow}    Removes an entry by the given id
+
+#{'update'.yellow}    Update termites source, using it's repository
+#{'help'.yellow}      Shows this message
+
 }
+# #{'reload'.yellow}    Reload termites source
 
 # create or select the database
 DB = SQLite3::Database.new(File.dirname(__FILE__)+"/"+DB_NAME)
@@ -121,25 +126,26 @@ end
 def show_status n
   @row ||= Entry.last
   if !@row.nil?
-    "#{@row.status_message} since #{@row.datetime} ~ #{Time.now.datetimesec}".left(n).green
+    "#{@row.status_message} since #{@row.datetime} ~ #{Time.now.datetimesec}\n".green
   else
-    "Please use 'termite start' to initialize the database.".left(n).yellow
+    "Please use 'termite start' to initialize the database.".yellow
   end
 end
 
 # get options from ARGV
 opts = GetoptLong.new(
   ['--no-header', GetoptLong::NO_ARGUMENT],
-  ['-m', GetoptLong::REQUIRED_ARGUMENT],
-  ['-f', GetoptLong::NO_ARGUMENT]
+  ['--no-status', GetoptLong::NO_ARGUMENT],
+  ['-f', GetoptLong::NO_ARGUMENT],
+  ['-m', GetoptLong::REQUIRED_ARGUMENT]
 )
 comments = ''
-no_header = false
-fixed = false
+fixed = no_status = no_header = false
 opts.each do |option,value|
   comments = value if option.to_s == '-m'
   fixed = true if option.to_s == '-f'
   no_header = true if option.to_s == '--no-header'
+  no_status = true if option.to_s == '--no-status'
 end
 
 # now deal with the commands
@@ -147,10 +153,10 @@ begin
   now = Time.now
   status_size = 80
   case arg = ARGV.shift
-    when 'add'
+    when 'create'
       command = ARGV.shift
-      date = Time.parse(ARGV.shift)
-      if ['start','stop','lunch','back'].include?(command) && date.is_a?(Time)
+      date = Time.parse ARGV.shift
+      if ['start','stop','lunch','back','sick'].include?(command) && date.is_a?(Time)
         Entry.create :date => date.to_i, :status => command, :comments => comments
       end
     when 'edit'
@@ -172,7 +178,7 @@ begin
       else
         puts "The correct date formats are YYYY-mm-dd HH:MM, dd-mm-YYYY HH:MM and HH:MM".banner.warning!
       end
-    when 'delete'
+    when 'remove'
       id = ARGV.shift
       if id =~ /^\d+$/
         row = Entry.find(:conditions => "timesheet_id = #{id}").first
@@ -180,27 +186,28 @@ begin
           puts Entry.header
           puts row.to_list
           puts ""
-          puts "are you sure you want to delete this entry? [y/N]".warning
+          puts "are you sure you want to remove this entry? [y/N]".warning
           confirmation = STDIN.gets.chomp
           Entry.remove :conditions => "timesheet_id=#{id}" if confirmation =~ /y/i
         end
       else
         puts "You need to entry a valid ID.".banner.error!
       end
-    when 'update'
-      row = Entry.last
-      if !row.nil?
-        puts Entry.header
-        puts row.to_list
-        puts ""
-        puts "are you sure you want to change the date in this entry to '#{now.iso}'? [y/N]".warning
-        confirmation = STDIN.gets.chomp
-        fields = ["date=#{now.to_i}"]
-        fields << "comments='#{comments}'" if !comments.blank?
-        Entry.update :conditions => "timesheet_id=#{row.timesheet_id}", :fields => fields if confirmation =~ /y/i
-      end
+    # when 'update'
+    #   row = Entry.last
+    #   if !row.nil?
+    #     puts Entry.header
+    #     puts row.to_list
+    #     puts ""
+    #     puts "are you sure you want to change the date in this entry to '#{now.iso}'? [y/N]".warning
+    #     confirmation = STDIN.gets.chomp
+    #     fields = ["date=#{now.to_i}"]
+    #     fields << "comments='#{comments}'" if !comments.blank?
+    #     Entry.update :conditions => "timesheet_id=#{row.timesheet_id}", :fields => fields if confirmation =~ /y/i
+    #   end
     when 'list'
       limit = ARGV.shift || 10
+      limit = nil if limit == 'all'
       rows = Entry.find({:order => 'date desc', :limit => limit})
       status_size = 112
       unless ARGV.include?('--no-header')
@@ -527,15 +534,27 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(28).black_white_bold
           puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
       end
+    when 'update'
+      no_status = true
+      puts `cd #{File.dirname(__FILE__)} && git pull`
+    # when 'reload'
+    #   no_status = true
+    #   for file in ['~/.bash_profile','~/.bashrc']
+    #     if File.exist? file
+    #       puts "  reloading #{file}".warn
+    #       `source '#{file}'`
+    #     end
+    #   end
     when 'droptable'
       puts "Are you sure you want to drop your timesheet table? [y/N]".warning
-      puts 'WARNING: THIS CANNOT BE UNDONE!'.banner.black_yellow_blink
+      puts 'WARNING: THIS CANNOT BE UNDONE!'.banner.black_yellow
       confirmation = STDIN.gets.chomp
       puts "Are you REALLY sure you want to drop your timesheet table? [y/N]".warning
-      puts 'WARNING: THIS CANNOT BE UNDONE!'.banner.black_yellow_blink
+      puts 'THIS REALLY CAN NOT BE UNDONE!'.banner.black_yellow_blink
       extra_confirmation = STDIN.gets.chomp      
-      DB.execute("drop table timesheet") if confirmation =~ /y/i && extra_confirmation =~ /y/i
+      DB.execute("drop table timesheet") if confirmation =~ /^y$/i && extra_confirmation =~ /^y$/i
     when 'help', /[^\-]\w+/
+      no_status = true
       puts help_message
   end
   @row = Entry.last
@@ -544,7 +563,7 @@ rescue Exception => e
   puts "An error ocurred #{e.message}\n  #{e.backtrace.join("\n  ")}".error
 end
 
-unless no_header
+if !no_status
   if fixed
     `clear`
     while true
