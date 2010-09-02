@@ -2,7 +2,7 @@
 # 
 # Termite
 # command line time tracker
-# Version: 0.7
+# Version: 0.8
 # Author: joão paulo camargo
 # 
 # This script is released under the MIT License
@@ -72,9 +72,8 @@ end
 # color picking function
 def cpick *args
   args = args.extract_options!
-  time = Time.at(args[:date])
+  time = Time.at args[:date]
   return 'cyan' if [0,6].include? time.wday
-  # return 'white', 'red' if time.is_holiday? && args[:bg]
   return 'red' if time.is_holiday?
   case args[:status]
     when 'sick'
@@ -105,8 +104,8 @@ def cpick *args
       ('yellow' if time.hour == 1 && time.min < 15) ||
       'red'
     when 'total'
-      ('white' if time.hour == TIME_CONFIG[:workday] and time.min <= 30) ||
-      ('green' if time.hour == TIME_CONFIG[:workday]+1 || (time.hour == TIME_CONFIG[:workday] and time.min >= 30)) ||
+      ('white' if time.hour == TIME_CONFIG[:workday] && time.min <= 30) ||
+      ('green' if time.hour == TIME_CONFIG[:workday]+1 || (time.hour == TIME_CONFIG[:workday] && time.min >= 30)) ||
       ('yellow' if time.hour == TIME_CONFIG[:workday]+2 || time.hour < TIME_CONFIG[:workday]) ||
       'red'
     else
@@ -157,12 +156,12 @@ begin
     when 'edit'
       id = ARGV.shift if ARGV[0] =~ /^\d+$/
       date = Time.parse ARGV.shift
-      puts "#{id} #{date.inspect}"
-      fields = ["date=#{date.to_i}"]
+      fields = []
+      fields << "date=#{date.to_i}" if date.is_a?(Time)
       fields << "comments='#{comments}'" if !comments.blank?
       if date.is_a?(Time) && id =~ /^\d+$/
         row = Entry.find(:conditions => "timesheet_id = #{id}").first
-        if !row.nil?
+        if !row.nil? && !fields.empty?
           puts Entry.header
           puts row.to_list
           puts ""
@@ -171,11 +170,11 @@ begin
           Entry.update :conditions => "timesheet_id=#{id}", :fields => fields if confirmation =~ /y/i
         end
       else
-        puts "The correct date format is YYYY-mm-dd HH:MM".banner.warning!
+        puts "The correct date formats are YYYY-mm-dd HH:MM, dd-mm-YYYY HH:MM and HH:MM".banner.warning!
       end
     when 'delete'
       id = ARGV.shift
-      if id =~ /\d+/
+      if id =~ /^\d+$/
         row = Entry.find(:conditions => "timesheet_id = #{id}").first
         if !row.nil?
           puts Entry.header
@@ -225,7 +224,7 @@ begin
       puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
     when 'sick'
       row = Entry.last
-      if !row.nil? && row.stop? # == 'stop'
+      if !row.nil? && row.stop?
         today = Time.local(now.year,now.month,now.day)
         Entry.create :date => today.to_i, :status => arg, :comments => comments
         set_adium_status('away', ADIUM_STATUS[:sick])
@@ -237,7 +236,7 @@ Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
       end
     when 'start'
       row = Entry.last
-      if !row.nil? && row.stop? # status == 'stop'
+      if !row.nil? && row.stop?
         Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('available', ADIUM_STATUS[:available])
       else
@@ -248,7 +247,7 @@ Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
       end
     when 'lunch'
       row = Entry.last
-      if !row.nil? && row.start? # status == 'start'
+      if !row.nil? && row.start?
         Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('away', ADIUM_STATUS[:lunch])
       else
@@ -259,7 +258,7 @@ Please use "termite add start [YYYY-mm-dd HH:MM], and try again."
       end
     when 'back'
       row = Entry.last
-      if !row.nil? && row.lunch? # status == 'lunch'
+      if !row.nil? && row.lunch?
         Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('available', ADIUM_STATUS[:available])
       else
@@ -270,7 +269,7 @@ Please use "termite add lunch [YYYY-mm-dd HH:MM], and try again."
       end
     when 'stop'
       row = Entry.last
-      if !row.nil? && (row.start? || row.back?) # ['start','back'].include?(row.status)
+      if !row.nil? && (row.start? || row.back?)
         Entry.create :date => now.to_i, :status => arg, :comments => comments
         set_adium_status('away', ADIUM_STATUS[:stop])
       else

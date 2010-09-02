@@ -97,11 +97,11 @@ class Entry # < ActiveRecord::Base
   def self.report time
     start = lunch = back = stop = lunch_duration = total = nil
     periods = []
-    rows = find :conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"], :order => 'date asc'
+    rows = find :conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"], :order => 'date desc'
     if !rows.empty?
       rows.each do |row|
         start_row = start = row
-        stop_row = find(:conditions => ["date between #{start.to_i} and #{time.end_of_day.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1).first
+        stop_row = find(:conditions => ["date > #{start.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1).first
         if stop_row.nil?
           stop_row = stop = time
         else
@@ -125,7 +125,7 @@ class Entry # < ActiveRecord::Base
         req_lunch_duration = Time.at(req_lunch_duration + TIME_CONFIG[:fix_time])
         start = lunch = back = stop = lunch_duration = total = nil if total_ut == 0
         periods << [start, lunch, back, stop, lunch_duration, req_lunch_duration, total]
-      end      
+      end
     end
     
     return periods
