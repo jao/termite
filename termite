@@ -126,9 +126,9 @@ end
 def show_status n
   @row ||= Entry.last
   if !@row.nil?
-    "#{@row.status_message} since #{@row.datetime} ~ #{Time.now.datetimesec}\n".green
+    "#{@row.status_message} since #{@row.datetime} ~ #{Time.now.datetimesec}".left(n).black_green_bold
   else
-    "Please use 'termite start' to initialize the database.".yellow
+    "Please use 'termite start' to initialize the database.".left(n).black_yellow_bold
   end
 end
 
@@ -193,18 +193,6 @@ begin
       else
         puts "You need to entry a valid ID.".banner.error!
       end
-    # when 'update'
-    #   row = Entry.last
-    #   if !row.nil?
-    #     puts Entry.header
-    #     puts row.to_list
-    #     puts ""
-    #     puts "are you sure you want to change the date in this entry to '#{now.iso}'? [y/N]".warning
-    #     confirmation = STDIN.gets.chomp
-    #     fields = ["date=#{now.to_i}"]
-    #     fields << "comments='#{comments}'" if !comments.blank?
-    #     Entry.update :conditions => "timesheet_id=#{row.timesheet_id}", :fields => fields if confirmation =~ /y/i
-    #   end
     when 'list'
       limit = ARGV.shift || 10
       limit = nil if limit == 'all'
@@ -352,7 +340,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(21).black_white_bold
           footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(21).black_white_bold
           footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(25).black_white_bold
-          puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
+          puts footer if worked_days > 0 || worked_hours > 0
         when 'weekly'
           today = now
           start_of_week = today.days(-today.wday)
@@ -402,7 +390,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(18).black_white_bold
           footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(18).black_white_bold
           footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(20).black_white_bold
-          puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
+          puts footer if worked_days > 0 || worked_hours > 0
         when 'monthly'
           this_month = ARGV.shift || now.month
           this_year = ARGV.shift || now.year
@@ -460,11 +448,11 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
           
           footer = ''
-          footer = "worked: #{worked_days} days".left(16).black_white_bold
+          footer = "worked: #{worked_days} days".left(19).black_white_bold
           footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(20).black_white_bold
           footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(22).black_white_bold
-          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(24).black_white_bold
-          puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
+          footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(22).black_white_bold
+          puts footer if worked_days > 0 || worked_hours > 0
         when 'period'          
           start_date = ARGV.shift || now.days(-30).date
           end_date = ARGV.shift || now.date
@@ -532,19 +520,11 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(25).black_white_bold
           footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(26).black_white_bold
           footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(28).black_white_bold
-          puts footer + "\n\n" if worked_days > 0 || worked_hours > 0
+          puts footer if worked_days > 0 || worked_hours > 0
       end
     when 'update'
       no_status = true
       puts `cd #{File.dirname(__FILE__)} && git pull`
-    # when 'reload'
-    #   no_status = true
-    #   for file in ['~/.bash_profile','~/.bashrc']
-    #     if File.exist? file
-    #       puts "  reloading #{file}".warn
-    #       `source '#{file}'`
-    #     end
-    #   end
     when 'droptable'
       puts "Are you sure you want to drop your timesheet table? [y/N]".warning
       puts 'WARNING: THIS CANNOT BE UNDONE!'.banner.black_yellow
@@ -567,10 +547,11 @@ if !no_status
   if fixed
     `clear`
     while true
-      print "\r#{show_status(status_size)}"
+      print "\r#{show_status(status_size+1)}"
       sleep(1)
     end
   else
-    puts show_status(status_size)
+    puts show_status(status_size+1)
+    puts ""
   end
 end
