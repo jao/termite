@@ -274,7 +274,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
 }
       end
     when 'report'
-      periodic = ARGV.shift || 'daily'
+      periodic = 'daily'
+      periodic = ARGV.shift if ARGV[0] =~ /^[a-z]+$/i
       case periodic
         when 'daily'
           # daily report
@@ -456,8 +457,8 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(22).black_white_bold
           puts footer if worked_days > 0 || worked_hours > 0
         when 'period'          
-          start_date = ARGV.shift || now.days(-30).date
-          end_date = ARGV.shift || now.date
+          start_date = ARGV.shift || now.days(-30)
+          end_date = ARGV.shift || now
           
           today = now
           start_of_week = now.days(-now.wday)
@@ -469,17 +470,24 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           end
           
           if start_date.is_a?(String)
-            date = start_date.split('/').reverse.map{|d| d.to_i}
-            day = Time.local(date[0], date[1], date[2])
+            dateymd = start_date.split('-').reverse.map{|d| d.to_i}
+            puts dateymd.inspect
+            day = Time.local(dateymd[0], dateymd[1], dateymd[2])
           else
             day = start_date
           end
           
           if end_date.is_a?(String)
-            date = end_date.split('/').reverse.map{|d| d.to_i}
-            end_day = Time.local(date[0], date[1], date[2])
+            dateymd = end_date.split('-').reverse.map{|d| d.to_i}
+            end_day = Time.local(dateymd[0], dateymd[1], dateymd[2])
           else
             end_day = end_date
+          end
+          
+          if end_day.to_i < day.to_i
+            temp_day = day
+            day = end_day
+            end_day = temp_day
           end
           
           status_size = 103
@@ -492,10 +500,19 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           
           days = {}
           while day.to_i <= end_day.to_i
-            (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = Entry.report_daily day
-            worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
-            worked_days += 1 if !start.nil? && ![0,6].include?(day.wday) && !day.is_holiday?
-            days[day.to_i.to_s.to_sym] = {:w => day.wday, :t => total}
+            periods = Entry.report day
+            total_time = nil
+            periods.each do |work_period|
+              (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = work_period
+              worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
+              worked_days += 1 if !start.nil? && ![0,6].include?(day.wday) && !day.is_holiday? && periods.first == work_period
+              if total_time.nil?
+                total_time = total
+              else
+                total_time += total.to_i - TIME_CONFIG[:fix_time]
+              end
+            end
+            days[day.to_i.to_s.to_sym] = {:w => day.wday, :t => total_time}
             day = day.tomorrow
           end
           
