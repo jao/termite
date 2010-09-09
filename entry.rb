@@ -100,23 +100,21 @@ class Entry # < ActiveRecord::Base
     rows = find :conditions => ["date between #{time.start_of_day.to_i} and #{time.end_of_day.to_i}", "status = 'start'"], :order => 'date desc'
     if !rows.empty?
       rows.each do |row|
-        start_row = start = row
-        stop_row = find(:conditions => ["date > #{start.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1).first
-        if stop_row.nil?
-          stop_row = stop = time
-        else
-          stop = stop_row
-        end
-        total_ut = (stop_row.to_i - start_row.to_i)
+        start = row
+        stop = find(:conditions => ["date > #{start.to_i}", "status = 'stop'"], :order => 'date asc', :limit => 1).first
+        stop = time if stop.nil?
+        total_ut = (stop.to_i - start.to_i)
         
         # lunch time and back
-        lunchtime = find :conditions => ["date between #{start.to_i} and #{stop.to_i}", "(status = 'lunch' or status = 'back')"]
+        lunchtime = find :conditions => ["date > #{start.to_i}", "date < #{stop.to_i}", "(status = 'lunch' or status = 'back')"], :limit => 2
+        lunch = back = nil
         if !lunchtime.empty?
           lunchtime.each do |row|
             lunch = row if row.lunch?
             back = row if row.back?
           end
         end
+        
         lunch_duration = (!back.nil? && !lunch.nil?) ? back.to_i - lunch.to_i : (!lunch.nil?) ? time.to_i - lunch.to_i : 0
         minimum_lunch_duration = [0,6].include?(time.wday) || total_ut <= 22500 ? 0 : TIME_CONFIG[:lunch][:full]
         req_lunch_duration = (lunch_duration >= minimum_lunch_duration) ? lunch_duration : minimum_lunch_duration
