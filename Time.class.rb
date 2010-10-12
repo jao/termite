@@ -77,10 +77,14 @@ class Time
     end  
   end
   
-  def is_holiday?
+  def holiday?
     HOLIDAYS.each do |holiday|
       return true if holiday[:date] == self.day_month && self.year > 1970
     end
     return false
+  end
+  
+  def weekend?
+    [0,6].include?(self.wday)
   end
 end
