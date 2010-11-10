@@ -100,6 +100,8 @@ class TermiteCompletion
         end
       when 'update'
         ''
+      when 'export'
+        ''
       # when 'reload'
       #   ''
       else matching_features

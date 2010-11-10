@@ -52,6 +52,7 @@ help_message = %{#{'Usage: termite [command] [[params]]'.green}
 
 #{'list'.yellow}      List the last n entries
 #{'report'.yellow}    Shows a report of the latest information
+#{'export'.yellow}    Shows a csv table for a given period
 
 #{'create'.yellow}    Adds a new entry, used to add times for previous dates and times
 #{'edit'.yellow}      Updates an entry by the given id with given date 
@@ -271,6 +272,67 @@ Error, you forgot to log you were working or back from lunch, cannot stop.
 Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
 }
       end
+    when 'export'
+      start_date = ARGV.shift || now.days(-30)
+      end_date = ARGV.shift || now
+      
+      today = now
+      start_of_week = now.days(-now.wday)
+      
+      if start_date.is_a?(String)
+        dateymd = start_date.split('-').reverse.map{|d| d.to_i}
+        puts dateymd.inspect
+        day = Time.local(dateymd[0], dateymd[1], dateymd[2])
+      else
+        day = start_date
+      end
+      
+      if end_date.is_a?(String)
+        dateymd = end_date.split('-').reverse.map{|d| d.to_i}
+        end_day = Time.local(dateymd[0], dateymd[1], dateymd[2])
+      else
+        end_day = end_date
+      end
+      
+      if end_day.to_i < day.to_i
+        temp_day = day
+        day = end_day
+        end_day = temp_day
+      end
+      
+      puts "Generating CSV table for period: #{day.date} to #{end_day.date}".center(103).black_yellow_bold
+      puts "date,started working,stopped working,lunch duration,work duration,holiday"
+      
+      # total values
+      worked_hours = 0
+      worked_days = 0
+      
+      while day.to_i <= end_day.to_i
+        periods = Entry.report day
+        total_time = nil
+        periods.each do |work_period|
+          (start, lunch, back, stop, lunch_duration, req_lunch_duration, total) = work_period
+          worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
+          worked_days += 1 if !start.nil? && !day.weekend? && !day.holiday? && periods.first == work_period
+          if !start.nil? && !stop.nil?
+            puts "#{day.date},#{start.time},#{stop.time},#{lunch_duration.time if !lunch.nil? && !back.nil?},#{total.time},#{day.holiday? ? 1 : 0}"
+          else
+            puts "#{day.date},,,,,#{day.holiday? ? 1 : 0}"
+          end
+        end
+        day = day.tomorrow
+      end
+      
+      total = Time.at(worked_hours + TIME_CONFIG[:fix_time])
+      average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
+      
+      footer = ''
+      footer = "worked: #{worked_days} days".left(25).black_white_bold
+      footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(25).black_white_bold
+      footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(26).black_white_bold
+      footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(28).black_white_bold
+      puts footer if worked_days > 0 || worked_hours > 0
+
     when 'report'
       periodic = 'daily'
       periodic = ARGV.shift if ARGV[0] =~ /^[a-z]+$/i
@@ -454,13 +516,13 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(22).black_white_bold
           footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(22).black_white_bold
           puts footer if worked_days > 0 || worked_hours > 0
-        when 'period'          
+        when 'period'
           start_date = ARGV.shift || now.days(-30)
           end_date = ARGV.shift || now
           
           today = now
           start_of_week = now.days(-now.wday)
-        
+          
           week_days_header = []
           0.upto(6) do |wday|
             day = start_of_week.days(wday)
