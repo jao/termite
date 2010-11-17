@@ -301,7 +301,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       end
       
       puts "Generating CSV table for period: #{day.date} to #{end_day.date}".center(103).black_yellow_bold
-      puts "date,started working,stopped working,lunch duration,work duration,holiday"
+      puts "date,started working,stopped working"
       
       # total values
       worked_hours = 0
@@ -315,9 +315,9 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
           worked_hours += total.to_i - TIME_CONFIG[:fix_time] if !total.nil?
           worked_days += 1 if !start.nil? && !day.weekend? && !day.holiday? && periods.first == work_period
           if !start.nil? && !stop.nil?
-            puts "#{day.date},#{start.time},#{stop.time},#{lunch_duration.time if !lunch.nil? && !back.nil?},#{total.time},#{day.holiday? ? 1 : 0}"
+            puts "#{day.date},#{start.time},#{stop.time}"
           else
-            puts "#{day.date},,,,,#{day.holiday? ? 1 : 0}"
+            puts "#{day.date},,"
           end
         end
         day = day.tomorrow
