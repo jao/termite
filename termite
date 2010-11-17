@@ -300,7 +300,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
         end_day = temp_day
       end
       
-      puts "Generating CSV table for period: #{day.date} to #{end_day.date}".center(103).black_yellow_bold
+      puts "Generating CSV file for period: #{day.date} to #{end_day.date}".center(80).black_yellow_bold
       puts "date,started working,stopped working"
       
       # total values
@@ -327,10 +327,10 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       average = Time.at((worked_hours/worked_days) + TIME_CONFIG[:fix_time]) if worked_days > 0
       
       footer = ''
-      footer = "worked: #{worked_days} days".left(25).black_white_bold
-      footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(25).black_white_bold
-      footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(26).black_white_bold
-      footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(28).black_white_bold
+      footer = "worked: #{worked_days} days".left(20).black_white_bold
+      footer += (worked_days > 0 ? "~ #{(average.day-1) * 24 + average.hour}:#{'%02d' % average.min} hours/day" : '').left(20).black_white_bold
+      footer += (worked_days > 0 ? "EWT #{worked_days * 8} hours" : '').right(20).black_white_bold
+      footer += (worked_hours > 0 ? "Total #{(total.day-1) * 24 + total.hour}:#{'%02d' % total.min} hours" : '').right(21).black_white_bold
       puts footer if worked_days > 0 || worked_hours > 0
 
     when 'report'
