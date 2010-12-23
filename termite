@@ -334,6 +334,7 @@ Please use "termite add [start|back] [YYYY-mm-dd HH:MM], and try again."
       puts footer if worked_days > 0 || worked_hours > 0
 
     when 'report'
+      system('clear')
       periodic = 'daily'
       periodic = ARGV.shift if ARGV[0] =~ /^[a-z]+$/i
       case periodic
