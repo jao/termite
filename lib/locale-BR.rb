@@ -17,23 +17,28 @@ HOLIDAYS = [
   {:date => '25/12', :label => 'Natal'}
 ]
 
-# add the other variable holidays
-year = Time.now.year
-x = 24; y = 5
-a = year % 19
-b = year % 4
-c = year % 7
-d = (19*a+x) % 30
-e = (2*b+4*c+6*d+y) % 7
-date = (d+e) > 9 ? "#{"%02d" % (d+e-9)}/04" : "#{"%02d" % (d+e+22)}/03"
-date = "19/04" if date == "26/04"
-date = "18/04" if date == "25/04" && a > 10 && d == 28
-eastern_date = Time.parse("#{date.gsub('/','-')}-#{year}")
+begin
+  # add the other variable holidays
+  year = Time.now.year
+  x = 24; y = 5
+  a = year % 19
+  b = year % 4
+  c = year % 7
+  d = (19*a+x) % 30
+  e = (2*b+4*c+6*d+y) % 7
+  date = (d+e) > 9 ? "#{"%02d" % (d+e-9)}/04" : "#{"%02d" % (d+e+22)}/03"
+  date = "19/04" if date == "26/04"
+  date = "18/04" if date == "25/04" && a > 10 && d == 28
+  eastern_date = Time.parse("#{date.gsub('/','-')}-#{year}")
 
-other_holidays = [{:date => date, :label => "Pascoa"}]
-other_holidays << {:date => (eastern_date.days(-48)).day_month, :label => "Carnaval"}
-other_holidays << {:date => (eastern_date.days(-47)).day_month, :label => "Carnaval"}
-other_holidays << {:date => (eastern_date.days(60)).day_month, :label => "Corpus Christi"}
+  other_holidays = [{:date => date, :label => "Pascoa"}]
+  other_holidays << {:date => (eastern_date.days(-48)).day_month, :label => "Carnaval"}
+  other_holidays << {:date => (eastern_date.days(-47)).day_month, :label => "Carnaval"}
+  other_holidays << {:date => (eastern_date.days(60)).day_month, :label => "Corpus Christi"}
+rescue Exception => e
+  puts "Error".banner.error!
+  puts e.message.red
+end
 HOLIDAYS.concat(other_holidays)
 
 # state/region specific holidays
