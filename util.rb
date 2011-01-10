@@ -19,6 +19,7 @@ def cpick *args
   return 'blue' if time.holiday?
   case args[:status]
     when 'sick': 'pink'
+    when 'personal': 'pink'
     when 'start'
       ('white' if time.hour == TIME_CONFIG[:start]) ||
       ('green' if time.hour == TIME_CONFIG[:start]+1) ||

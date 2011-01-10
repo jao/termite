@@ -19,7 +19,7 @@ class Entry # < ActiveRecord::Base
   def to_list
     [
       timesheet_id.to_s.right(7),
-      status.left(8),
+      status.left(10),
       date.left(12),
       time.right(6).tc(cpick({:status => status, :date => unixtime})),
       comments.left(75)

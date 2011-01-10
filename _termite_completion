@@ -57,7 +57,7 @@ class TermiteCompletion
           else ''
         end
       when 'add'
-        if ['start', 'stop', 'lunch', 'back', 'sick'].include? typed_param
+        if ['start', 'stop', 'lunch', 'back', 'sick', 'personal'].include? typed_param
           case typed_date
             when /^("|')$/
               [Time.now.strftime("%Y-%m-%d %H:%M") + typed_date]
@@ -69,7 +69,7 @@ class TermiteCompletion
 
         case typed_param
           when '', /^[a-z]+$/i
-            ['start', 'stop', 'lunch', 'back', 'sick'].select do |param|
+            ['start', 'stop', 'lunch', 'back', 'sick', 'personal'].select do |param|
               param[0, typed_param.length] == typed_param && param != typed_param
             end
           else ''

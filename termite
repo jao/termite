@@ -35,6 +35,7 @@ ADIUM_STATUS = {
   :lunch => 'Out to lunch',
   :away => 'Away',
   :sick => 'Do not disturb',
+  :personal => 'Do not disturb',
   :stop => 'Extended away'
 }
 
@@ -48,7 +49,8 @@ help_message = %{#{'Usage: termite [command] [[params]]'.green}
 #{'stop'.yellow}      Marks that you stopped working
 #{'lunch'.yellow}     Marks that you are out to lunch
 #{'back'.yellow}      Marks that you are back from lunch
-#{'sick'.yellow}      Marks that you are sick for the day
+#{'sick'.yellow}      Marks that you tock a sick day
+#{'personal'.yellow}  Marks that you took a personal day
 
 #{'list'.yellow}      List the last n entries
 #{'report'.yellow}    Shows a report of the latest information
@@ -99,7 +101,7 @@ begin
     when 'create'
       command = ARGV.shift
       date = Time.parse ARGV.shift
-      if ['start','stop','lunch','back','sick'].include?(command) && date.is_a?(Time)
+      if ['start','stop','lunch','back','sick','personal'].include?(command) && date.is_a?(Time)
         Entry.create :date => date.to_i, :status => command, :comments => comments
       end
     when 'edit'
@@ -169,6 +171,18 @@ begin
       else
         puts %{
 Error, you forgot to log you were leaving work, cannot add a sick day.
+Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
+}
+      end
+    when 'personal'
+      row = Entry.last
+      if !row.nil? && row.stop?
+        today = Time.local(now.year,now.month,now.day)
+        Entry.create :date => today.to_i, :status => arg, :comments => comments
+        set_adium_status('away', ADIUM_STATUS[:personal])
+      else
+        puts %{
+Error, you forgot to log you were leaving work, cannot add a personal day.
 Please use "termite add stop [YYYY-mm-dd HH:MM], and try again."
 }
       end
