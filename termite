@@ -17,6 +17,7 @@ $LOAD_PATH << File.dirname(__FILE__)
 require 'util.rb'
 require 'sqlite3'
 require 'getoptlong'
+gem 'activerecord', '=2.3.9'
 require 'active_record'
 require 'entry.rb'
 
